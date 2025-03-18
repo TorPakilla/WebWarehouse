@@ -1,0 +1,399 @@
+/* ====================================
+   1) Layout พื้นฐาน
+==================================== */
+.combined-map-container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.map-container {
+  width: 100%;
+  height: 580px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* ====================================
+   2) Marker (Warehouse & POS)
+==================================== */
+.warehouse-marker,
+.pos-marker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.warehouse-icon {
+  font-size: 30px;
+  color: #d32f2f;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.store-icon {
+  font-size: 30px;
+  color: #7bff00;
+}
+
+/* ====================================
+   3) Popup (BranchPopup)
+==================================== */
+.branch-popup-container {
+  width: 250px;
+  background-color: rgba(0,0,0,0.85);
+  border: 2px solid #ff0000;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+  padding: 10px;
+  position: relative;
+  overflow: visible;
+}
+
+.popup-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  background: #333;
+  border-bottom: 1px solid #999;
+}
+
+.popup-branch-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-button {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background: #8b0000;
+  color: #fff;
+  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.upload-button:hover {
+  opacity: 1;
+}
+
+.popup-branch-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 8px 0 10px;
+  text-align: center;
+}
+
+.popup-info-box {
+  margin-bottom: 10px;
+}
+
+.popup-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+}
+
+.popup-label {
+  font-weight: bold;
+  font-size: 12px;
+  color: #ffcc00;
+}
+
+.popup-value {
+  font-size: 12px;
+  color: #fff;
+}
+
+.popup-button-group {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.popup-button {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.popup-button:hover {
+  background: #a52828;
+}
+
+/* ====================================
+   4) Pending Shipments / Tooltip
+==================================== */
+.popup-shipment-box {
+  border-top: 1px dashed #999;
+  padding-top: 8px;
+  display: block;
+  overflow: visible;
+}
+
+.tooltip {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  background: #333;
+  padding: 5px;
+  border-radius: 4px;
+  z-index: 9999;
+  width: 150px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+  font-size: 11px;
+  color: #fff;
+}
+
+.popup-label-shipment {
+  font-weight: bold;
+  font-size: 12px;
+  color: #ffcc00;
+  margin-bottom: 5px;
+}
+
+.pending-item {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  background: rgba(139,0,0,0.3);
+  padding: 4px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+.no-pending {
+  font-size: 11px;
+  color: #ccc;
+}
+
+/* เอาพื้นหลังและกรอบของ Mapbox Popup ออก */
+.mapboxgl-popup-content {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+.mapboxgl-popup-tip {
+  display: none !important;
+}
+
+/* ====================================
+   5) Order Panel (ตัวอย่าง)
+==================================== */
+.order-panel {
+  position: absolute;
+  top: 0;
+  right: -740px;
+  width: 320px;
+  height: 93%;
+  background: linear-gradient(135deg, rgba(45,45,45,0.95), rgba(15,15,15,0.95));
+  border: 2px dashed #ff9900;
+  box-shadow: -6px 0 25px rgba(0,0,0,0.6);
+  padding: 20px;
+  z-index: 10;
+  border-radius: 12px;
+  display: none;
+  transition: right 0.5s ease, opacity 0.5s ease;
+  opacity: 0;
+}
+
+.order-panel.open {
+  display: block;
+  right: 0;
+  opacity: 1;
+}
+
+.order-panel .order-header {
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffcc00;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ff9900;
+}
+
+/* ====================================
+   6) Shipment Panel
+==================================== */
+.shipment-panel {
+  position: absolute;
+  top: 0;
+  right: -800px;
+  width: 760px;
+  max-height: 90vh;
+  background-color: rgba(0,0,0,0.9);
+  border: 2px solid #0080ff;
+  box-shadow: -4px 0 10px rgba(0,0,0,0.3);
+  padding: 15px;
+  z-index: 10;
+  border-radius: 8px;
+  display: none;
+  overflow-y: auto;
+  transition: right 0.4s ease-in-out;
+}
+
+.shipment-panel.open {
+  display: block;
+  right: 0;
+}
+
+/* ====================================
+   7) Draggable Selection Marker
+==================================== */
+.selection-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #00ff00;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #000;
+  cursor: pointer;
+  z-index: 2000;
+  font-size: 24px;
+  color: #000;
+  text-align: center;
+  line-height: 40px;
+}
+
+/* ====================================
+   8) Category List
+==================================== */
+.category-label {
+  font-weight: bold;
+  font-size: 12px;
+  color: #ffcc00;
+}
+
+.category-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.category-item {
+  background: rgba(255,255,255,0.1);
+  padding: 4px;
+  font-size: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #fff;
+  text-align: center;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90px;
+  height: 80px;
+}
+
+.category-item:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.category-item.selected {
+  background: #d32f2f;
+}
+
+/* ====================================
+   9) ปุ่ม / Error / Misc Buttons
+==================================== */
+.popup-button {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.popup-button:hover {
+  background: #a52828;
+}
+
+.error {
+  color: #ff5555;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.add-item-btn {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.add-item-btn:hover {
+  background: #a52828;
+}
+
+.remove-item-btn {
+  background: #ff4444;
+  color: #fff;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.remove-item-btn:hover {
+  background: #cc0000;
+}
+
+/* ====================================
+   10) Shipment Items
+==================================== */
+.shipment-items {
+  background: rgba(255,255,255,0.05);
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #555;
+}
+
+.shipment-item-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.shipment-item-row label {
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffcc00;
+  min-width: 120px;
+}
+
+.shipment-item-row select,
+.shipment-item-row input {
+  background-color: #222;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+  padding: 6px;
+  font-size: 12px;
+  min-width: 120px;
+}

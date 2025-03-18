@@ -1,0 +1,359 @@
+/* 🌟 Products Page Container (พอดีกับหน้าจอ) */
+.products-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(135deg, #1e1e1e, #111);
+    color: white;
+    padding: 10px 30px; /* ✅ ลด padding ให้พอดี */
+    max-width: 100vw; /* ✅ ใช้ความกว้างเต็มที่ */
+    margin: 0 auto;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* 🌟 Products Header */
+.products-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 30px;
+    background: black;
+    border-bottom: 3px solid #8b0000;
+    border-radius: 12px;
+    box-shadow: 0px 5px 12px rgba(139, 0, 0, 0.6);
+    max-width: 100%;
+}
+
+/* 🔙 ปุ่ม Back */
+.back-button {
+    background: none;
+    border: 2px solid #8b0000;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+    font-weight: bold;
+}
+
+.back-button:hover {
+    background: #8b0000;
+    transform: scale(1.1);
+}
+
+/* 🌟 Layout for the main content */
+.products-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 15px; /* ✅ ลด gap ให้กระชับขึ้น */
+    margin-top: 15px;
+    flex-grow: 1;
+    height: calc(100vh - 110px); /* ✅ ใช้พื้นที่พอดี */
+}
+
+/* 🌟 Product Form */
+.product-form-container {
+    width: 49%; /* ✅ ปรับให้เท่ากันกับ Category */
+    background: linear-gradient(135deg, #2c2c2c, #222);
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0px 6px 15px rgba(139, 0, 0, 0.6);
+    border: 2px solid #8b0000;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+/* 🎨 Form Title */
+.product-form-container h2 {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #ffcc00;
+}
+
+/* 📝 Input & Select */
+.product-form-container input,
+.product-form-container select {
+    background: #1e1e1e;
+    border: 2px solid #444;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 10px; /* ✅ ลด margin */
+    width: 100%;
+    transition: all 0.3s ease-in-out;
+    box-sizing: border-box;
+}
+
+.product-form-container input:focus,
+.product-form-container select:focus {
+    border-color: #ffcc00;
+    box-shadow: 0px 0px 10px rgba(255, 204, 0, 0.6);
+}
+
+/* 📤 Submit Button */
+.product-form-container button {
+    background: #8b0000;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+}
+
+.product-form-container button:hover {
+    background: #ffcc00;
+    color: black;
+    transform: scale(1.05);
+}
+
+/* 🌟 Product List Section */
+.product-list-container {
+    width: 49%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* ✅ เพิ่มช่องว่างระหว่างหมวดหมู่ */
+    padding: 20px; /* ✅ เพิ่ม Padding ให้ไม่ติดขอบ */
+    background: linear-gradient(135deg, #2c2c2c, #222);
+    border-radius: 12px;
+    box-shadow: 0px 6px 15px rgba(139, 0, 0, 0.6);
+    border: 2px solid #8b0000;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* 🌟 Category Section (แก้ปัญหาหมวดหมู่ล้นจอ) */
+.category-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* ✅ ทำให้ Responsive */
+    gap: 15px; /* ✅ เว้นช่องไฟให้พอดี */
+    width: 100%;
+    flex-grow: 1;
+    align-content: start;
+    padding: 10px;
+    justify-content: center;
+}
+
+/* 🎯 Category Header (ขยายขนาดอัตโนมัติ) */
+.category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    background: #333;
+    padding: 12px 18px;
+    border-radius: 10px;
+    transition: all 0.3s ease-in-out;
+    width: auto; /* ✅ ให้ขยายอัตโนมัติ */
+    max-width: 280px; /* ✅ ป้องกันล้นจอ */
+    justify-content: flex-start;
+    box-shadow: 0px 4px 10px rgba(255, 204, 0, 0.2);
+}
+
+.category-header:hover {
+    transform: scale(1.05);
+    background: #ffcc00;
+    color: black;
+}
+
+/* 🏷 Category Title */
+.category-header h2 {
+    margin: 0;
+    font-size: 16px; /* ✅ ลดขนาดให้พอดี */
+    font-weight: bold;
+    white-space: normal; /* ✅ ให้ข้อความขึ้นบรรทัดใหม่ได้ */
+    word-wrap: break-word;
+}
+
+/* 🎭 Category Icons */
+.category-header img {
+    width: 30px;
+    height: 30px;
+}
+
+/* ✅ Responsive สำหรับหน้าจอเล็ก */
+@media (max-width: 768px) {
+    .category-section {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .category-header {
+        max-width: 220px;
+        padding: 10px;
+    }
+
+    .category-header h2 {
+        font-size: 14px;
+    }
+}
+
+/* 🌟 Responsive Design */
+@media (max-width: 1024px) {
+    .products-content {
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+    }
+
+    .product-form-container,
+    .product-list-container {
+        width: 100%;
+        height: auto;
+    }
+
+    .category-section {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}
+
+/* 🌟 Product Popup */
+.product-popup {
+    position: fixed;
+    top: 5vh;
+    left: 5vw;
+    width: 90vw;
+    height: 88vh;
+    background-color: #1b1b1b;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 15px rgba(139, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* 🔥 Popup Header */
+.product-popup-header {
+    width: 80%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px;
+    border-bottom: 2px solid #8b0000;
+    color: white;
+    position: relative;
+}
+
+/* ✖ ปุ่มปิด Popup */
+.popup-close-button {
+    position: absolute;
+    background: none;
+    left: 10px;
+    top: 10px;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* 🖼 Product Image */
+.product-popup-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+/* 🏷 Product Details */
+.product-popup-details {
+    text-align: center;
+    color: white;
+    margin-bottom: 10px;
+}
+
+.product-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* 🎯 Popup Actions */
+.product-popup-actions {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* ✏️ ปุ่ม Edit */
+.product-popup-edit {
+    background-color: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.product-popup-edit:hover {
+    background-color: #45a049;
+}
+
+/* 🗑 ปุ่ม Delete */
+.product-popup-delete {
+    background-color: #d9534f;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.product-popup-delete:hover {
+    background-color: #c9302c;
+}
+
+/* 🛒 Product Grid */
+.product-popup-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 75vh;
+}
+
+/* 🎯 Individual Product Card */
+.product-popup-card {
+    background: #1e1e1e;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 2px 2px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #444;
+    text-align: center;
+}
+
+/* 🌟 Responsive Design */
+@media (max-width: 768px) {
+    .products-content {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .product-form-container,
+    .product-list-container {
+        width: 100%;
+    }
+
+    .product-popup {
+        width: 95vw;
+        height: 90vh;
+    }
+}

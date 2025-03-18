@@ -1,0 +1,332 @@
+/* ================= Global Modal & Header ================= */
+
+/* กำหนดขนาดสูงสุดของ .modal-content.custom-modal-size */
+.modal-content.custom-modal-size {
+  /* ปลดล็อกขนาดเพื่อให้ขยายได้ไม่จำกัด */
+  max-width: none; 
+  max-height: none; 
+  overflow: visible; 
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header อยู่บนสุด ไม่เลื่อน */
+.modal-header {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+/* Body (ส่วนเนื้อหา) จะเลื่อนภายใน แต่เราจะซ่อน scrollbar */
+.modal-body {
+  flex: 1 1 auto;
+  position: relative;   /* ใช้ position: relative สำหรับ Absolute Child */
+  overflow: auto;       /* ถ้าต้องการให้เนื้อหาทั่วไปเลื่อนใน modal ได้ */
+
+  /* ซ่อน scrollbar แต่ยังเลื่อนได้ */
+  scrollbar-width: none;         /* Firefox */
+  -ms-overflow-style: none;      /* IE 10+ */
+}
+.modal-body::-webkit-scrollbar {
+  display: none; /* Chrome Safari */
+}
+
+/* ปุ่ม Close */
+.popup-close-button {
+  background-color: #ffcc00;
+  color: #000;
+  font-weight: bold;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* ================= ปุ่มทั่วไปใน Modal ================= */
+.modal-button {
+  background-color: #ffcc00;
+  color: #000;
+  font-weight: bold;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 5px; 
+}
+
+/* ================= Manage Shipments Popup ================= */
+
+/* ปรับให้ .modal-body.shipments-popup ใช้ position: relative */
+.modal-body.shipments-popup {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #222;
+  color: #fff;
+  padding: 20px;
+  border-radius: 6px;
+  box-sizing: border-box;
+
+  /* ซ่อน scrollbar แต่ยังเลื่อนได้ */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-y: auto;
+}
+.modal-body.shipments-popup::-webkit-scrollbar {
+  display: none;
+}
+
+/* คอลัมน์ซ้าย (Create New Shipment) */
+.left-column {
+  position: relative; /* หรือ absolute ถ้าต้องการแบบเดิม */
+  background-color: #333;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ฟอร์ม Shipment */
+.shipment-form {
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+/* หากต้องการแทน inline style: flexDirection: column */
+.shipment-form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid #ccc; /* ถ้าต้องการสีขอบตามใน inline เดิม */
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+/* แถว Warehouse/POS (วางแนวนอน) */
+.shipment-form-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+/* บล็อก Selected Products (ข้างล่าง) */
+.selected-products-block {
+  margin-top: 10px;
+  border-top: 1px solid #ccc;
+  padding-top: 10px;
+}
+
+/* จัด label + select ในบรรทัดเดียวกัน */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.form-row label {
+  font-weight: bold;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.form-row select {
+  width: auto;
+  max-width: 100%;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background-color: #222;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+/* กล่องสินค้า Selected Products (เดิม) */
+.selected-products-list {
+  background-color: #1f1f1f;
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+.selected-products-list h5 {
+  margin: 0 0 8px 0;
+}
+.selected-products-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.selected-products-list li {
+  margin-bottom: 4px;
+}
+
+/* คอลัมน์ขวา (All Shipments) */
+.right-column {
+  background-color: #333;
+  padding: 15px;
+  border-radius: 8px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* ถ้าต้องการให้คอลัมน์ขวาเลื่อนภายในก็ใช้ overflow-y: auto */
+}
+.right-column-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.right-column-header h3 {
+  margin: 0;
+}
+
+/* กล่องครอบตาราง เพื่อให้ตาราง scroll ภายใน */
+.table-container {
+  flex: 1;
+  overflow-y: auto; 
+  border: 1px solid #444;
+  border-radius: 6px;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.table-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* ตาราง Shipments */
+.shipments-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #2a2a2a;
+}
+.shipments-table thead th {
+  position: sticky;
+  top: 0;
+  background-color: #444;
+  z-index: 1;
+}
+.shipments-table th,
+.shipments-table td {
+  padding: 8px 10px;
+  border: 1px solid #444;
+  text-align: left;
+}
+.shipments-table thead th {
+  color: #fff;
+}
+/* แถวสลับสี */
+.shipments-table tbody tr:nth-child(odd) {
+  background-color: #2f2f2f;
+}
+.shipments-table tbody tr:nth-child(even) {
+  background-color: #3a3a3a;
+}
+/* สถานะ */
+.status-completed {
+  color: #28a745; /* เขียว */
+}
+.status-pending {
+  color: #ffc107; /* เหลือง */
+}
+.status-canceled {
+  color: #dc3545; /* แดง */
+}
+
+/* ================= Inline Popup Shipments (Select Products) ================= */
+.inline-popup-shipments {
+  position: absolute;
+  top: 20%;
+  left: 50%; 
+  transform: translateX(-50%);
+  width: 450px;
+  z-index: 99999;
+  padding: 10px;
+  background: #fff;
+  color: #000; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.inline-popup-shipments-content .close-btn {
+  background: none;
+  border: none;
+  color: #000;
+  font-size: 1rem;
+  cursor: pointer;
+  float: right;
+}
+
+.inline-popup-shipments-content h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.inline-popup-shipments-content .category-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.inline-popup-shipments-content .category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.inline-popup-shipments-content .category-item.selected {
+  background-color: #ffcc00;
+  color: #000;
+}
+.inline-popup-shipments-content .category-item .category-icon {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 4px;
+}
+
+.inline-popup-shipments-content label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+.inline-popup-shipments-content select,
+.inline-popup-shipments-content input[type="number"] {
+  width: 100%;
+  padding: 6px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.inline-popup-shipments-content .confirm-btn {
+  background-color: #ffcc00;
+  color: #000;
+  font-weight: bold;
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* ================= Manage Orders / Products: ตัวอย่างคลาสเสริม (ถ้าต้องการ) ================= */
+/* หากมี inline style ในส่วน Manage Orders/Products ก็สามารถสร้างคลาสเฉพาะได้เช่นกัน */
+/* ตัวอย่าง: */
+.modal-section-divider-25 {
+  flex: 0 0 25%;
+}
+.modal-section-divider-30 {
+  flex: 0 0 30%;
+}
+/* เป็นต้น */

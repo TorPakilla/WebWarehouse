@@ -1,0 +1,151 @@
+/* Container หลัก */
+.inventory-page-container {
+    height: 100vh;
+    background-color: #1e1e1e;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  
+  /* Header */
+  .inventory-header {
+    width: 100%;
+    background-color: black;
+    padding: 15px 40px;
+    border-bottom: 3px solid #8b0000;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(139, 0, 0, 0.5);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  /* Content Container */
+  .inventory-content {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  /* ฟอร์มสำหรับจัดการ Inventory */
+  .inventory-form-container {
+    background-color: #222;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+  }
+  
+  .inventory-form-container .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+  }
+  
+  .inventory-form-container .form-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .inventory-form-container .form-group input,
+  .inventory-form-container .form-group select {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #8b0000;
+    background-color: #333;
+    color: white;
+  }
+  
+  .inventory-form-container .form-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  /* ปุ่มพื้นฐาน */
+  .submit-btn {
+    padding: 10px 20px;
+    background-color: #8b0000;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+  }
+  
+  .submit-btn:hover {
+    background-color: #a00000;
+  }
+  
+  .cancel-btn {
+    padding: 10px 20px;
+    background-color: #444;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .cancel-btn:hover {
+    background-color: #555;
+  }
+  
+  /* Container สำหรับรายการ Inventory */
+  .inventory-list-container {
+    background-color: #222;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    overflow-x: auto;
+  }
+  
+  /* ตารางสำหรับแสดงรายการ Inventory */
+  .inventory-list-container table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .inventory-list-container th,
+  .inventory-list-container td {
+    padding: 10px;
+    border-bottom: 1px solid #444;
+    text-align: left;
+  }
+  
+  .inventory-list-container th {
+    background-color: #8b0000;
+    color: white;
+  }
+  
+  /* ปุ่ม Action ในตาราง */
+  .inventory-list-container .edit-btn,
+  .inventory-list-container .delete-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-right: 5px;
+  }
+  
+  .inventory-list-container .edit-btn {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .inventory-list-container .edit-btn:hover {
+    background-color: #0056b3;
+  }
+  
+  .inventory-list-container .delete-btn {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .inventory-list-container .delete-btn:hover {
+    background-color: #c82333;
+  }
+  

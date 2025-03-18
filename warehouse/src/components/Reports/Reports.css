@@ -1,0 +1,135 @@
+/* Reports.css */
+
+.reports-container {
+  background: #2b2b2b;
+  color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.reports-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.reports-header h2 {
+  font-size: 1.8rem;
+  margin: 0;
+  color: #ffcc00;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.export-buttons button {
+  background: #444;
+  border: 1px solid #999;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.export-buttons button:hover {
+  background: #666;
+}
+
+/* Layout 3 คอลัมน์ */
+.reports-content {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
+/* left-column, center-column, right-column */
+.left-column {
+  flex: 0.7; /* ปรับตามต้องการ */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.center-column {
+  flex: 1; /* กว้างสุด */
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.right-column {
+  flex: 0.7;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* การ์ด */
+.report-card {
+  background: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 15px;
+  min-height: 100px;
+}
+
+.report-card h3 {
+  margin-top: 0;
+  color: #ffd700;
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+}
+
+.report-card p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* ส่วนกราฟ */
+.chart-section {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 15px;
+  min-height: 200px; /* กันกรณีกราฟเตี้ยไป */
+}
+
+/* ตาราง POS Branch-wise */
+.branch-summary-section {
+  background: #3a3a3a;
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.branch-summary-section h3 {
+  margin-top: 0;
+  color: #ffd700;
+  margin-bottom: 10px;
+}
+
+.branch-shipment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.branch-shipment-table th,
+.branch-shipment-table td {
+  border: 1px solid #666;
+  padding: 8px;
+  text-align: left;
+}
+
+.branch-shipment-table th {
+  background: #444;
+  color: #fff;
+  font-weight: 600;
+}
