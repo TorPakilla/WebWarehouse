@@ -32,29 +32,42 @@ const Reports = () => {
   // ----- State หลัก -----
   const [orders, setOrders] = useState([]);
   const [shipments, setShipments] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [inventories, setInventories] = useState([]); // เก็บข้อมูล Inventory
 
   // สำหรับ Product report
   const [totalOrderQuantity, setTotalOrderQuantity] = useState(0);
   const [totalShipmentQuantity, setTotalShipmentQuantity] = useState(0);
 
   // ----- State สำหรับ Filter Dropdown -----
-  // filterType: "Product" หรือ "Finance"
-  // selectedBranch: "All" หรือเลือกสาขาเฉพาะ
+  // filterType: "Product", "Finance" หรือ "Audit"
+  // selectedBranch: "All" หรือเลือกสาขาเฉพาะ (value เป็น branch id)
   const [filterType, setFilterType] = useState("Product");
   const [selectedBranch, setSelectedBranch] = useState("All");
 
-  // ===== ดึงข้อมูล Orders / Shipments =====
+  // ===== ดึงข้อมูล Orders, Shipments, Branches, Inventories =====
   useEffect(() => {
     const fetchReportsData = async () => {
       try {
-        const ordersRes = await axios.get(`${API_BASE_URL}/Orders`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const shipmentsRes = await axios.get(`${API_BASE_URL}/shipments`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [ordersRes, shipmentsRes, branchesRes, inventoriesRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/Orders`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_BASE_URL}/shipments`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_BASE_URL}/Branches`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API_BASE_URL}/Inventory`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+
+        // ตั้งค่าลง State ตามฟิลด์ที่ response ส่งมา
+        // สมมติว่า /Inventory ส่งข้อมูลในฟิลด์ "data"
         setOrders(ordersRes.data?.data || []);
         setShipments(shipmentsRes.data?.Shipments || []);
+        setBranches(branchesRes.data?.data || []);
+        setInventories(inventoriesRes.data?.data || []);
+
+        // Debug เฉพาะครั้งเดียวหลังดึงข้อมูลเสร็จ
+        console.log("=== Debug: Orders data ===", ordersRes.data?.data);
+        console.log("=== Debug: Shipments data ===", shipmentsRes.data?.Shipments);
+        console.log("=== Debug: Branches data ===", branchesRes.data?.data);
+        console.log("=== Debug: Inventories data ===", inventoriesRes.data?.data);
       } catch (error) {
         console.error("Error fetching reports data:", error);
       }
@@ -62,24 +75,39 @@ const Reports = () => {
     fetchReportsData();
   }, [token]);
 
+  // ===== สร้าง mapping branch_id => branch_name =====
+  const branchMap = branches.reduce((acc, branch) => {
+    acc[branch.branch_id] = branch.b_name;
+    return acc;
+  }, {});
+
+  // ===== สร้าง mapping product_id => price =====
+  const productPriceMap = inventories.reduce((acc, inv) => {
+    // ต้องแน่ใจว่าใน "inventories" มี product_id และ price
+    // ถ้า API ใช้ฟิลด์อื่นเช่น "unit_price" ต้องเปลี่ยนเป็น inv.unit_price
+    acc[inv.product_id] = inv.price;
+    return acc;
+  }, {});
+
   // ===== กรองข้อมูลตามสาขาที่เลือก =====
   const filteredOrders =
     selectedBranch === "All"
       ? orders
       : orders.filter((order) => order.branch_id === selectedBranch);
+
   const filteredShipments =
     selectedBranch === "All"
       ? shipments
       : shipments.filter((sh) => sh.to_branch_id === selectedBranch);
 
-  // ===== คำนวณ Product Totals จากข้อมูลที่ถูกกรอง =====
+  // ===== คำนวณ Product Totals =====
   const totalOrderQuantityFiltered = filteredOrders.reduce((acc, order) => {
     const orderTotal = order.order_items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
     return acc + orderTotal;
   }, 0);
 
-  const totalShipmentQuantityFiltered = filteredShipments.reduce((acc, s) => {
-    const shipmentTotal = s.items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+  const totalShipmentQuantityFiltered = filteredShipments.reduce((acc, sh) => {
+    const shipmentTotal = sh.shipment_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
     return acc + shipmentTotal;
   }, 0);
 
@@ -91,38 +119,65 @@ const Reports = () => {
     setTotalShipmentQuantity(totalShipmentQuantityFiltered);
   }, [totalShipmentQuantityFiltered]);
 
-  // คำนวณ POS Branch-wise Shipments Summary ให้รวม Total Quantity ด้วย
-const branchShipmentSummaryComputed =
-selectedBranch === "All"
-  ? (() => {
-      // ใช้ reduce ในการสรุปผล
-      const summary = shipments.reduce((acc, sh) => {
-        const branch = sh.to_branch_id;
-        // คำนวณจำนวนสินค้าจากแต่ละ shipment โดยรวม quantity ของ item ทุกตัว
-        const itemCount = sh.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
-        if (acc[branch]) {
-          acc[branch].shipmentsCount += 1;
-          acc[branch].totalQuantity += itemCount;
-        } else {
-          acc[branch] = { toBranch: branch, shipmentsCount: 1, totalQuantity: itemCount };
-        }
-        return acc;
-      }, {});
-      return Object.values(summary);
-    })()
-  : [];
+  // ===== คำนวณ POS Branch-wise Shipments Summary =====
+  const branchShipmentSummaryComputed =
+    selectedBranch === "All"
+      ? (() => {
+          const summary = shipments.reduce((acc, sh) => {
+            const branchId = sh.to_branch_id;
+            // รวม quantity ของ shipment_items
+            const itemCount = sh.shipment_items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+            if (acc[branchId]) {
+              acc[branchId].shipmentsCount += 1;
+              acc[branchId].totalQuantity += itemCount;
+            } else {
+              acc[branchId] = {
+                branchId,
+                branchName: branchMap[branchId] || branchId,
+                shipmentsCount: 1,
+                totalQuantity: itemCount,
+              };
+            }
+            return acc;
+          }, {});
+          return Object.values(summary);
+        })()
+      : [];
 
-
-  // ===== คำนวณ Finance Summary (ใช้ฟิลด์ order_total, shipment_total) =====
+  // ===== คำนวณ Finance Summary =====
+  // 1) Orders Finance
   const ordersFinance = filteredOrders.reduce(
-    (acc, order) => acc + (order.order_total || 0),
+    (acc, order) => acc + (order.total_amount || 0),
     0
   );
-  const shipmentsFinance = filteredShipments.reduce(
-    (acc, sh) => acc + (sh.shipment_total || 0),
-    0
-  );
+
+  // 2) Shipments Finance
+  const shipmentsFinance = filteredShipments.reduce((acc, sh) => {
+    const shipmentFinance = sh.shipment_items?.reduce((sum, item) => {
+      const productId = item.warehouse_inventory_id; // สมมติว่าใช้ warehouse_inventory_id
+      const price = productPriceMap[productId] || 0; // ถ้า productId ไม่ match หรือ price เป็น 0 จะได้ 0
+      return sum + ((item.quantity || 0) * price);
+    }, 0) || 0;
+    return acc + shipmentFinance;
+  }, 0);
+
   const combinedFinance = ordersFinance + shipmentsFinance;
+
+  // ===== Audit: ตรวจสอบความไม่สอดคล้อง =====
+  const quantityDiscrepancy = totalOrderQuantityFiltered - totalShipmentQuantityFiltered;
+  const financeDiscrepancy = ordersFinance - shipmentsFinance;
+
+  // ตรวจจับปัญหาใน orders
+  const auditOrderIssues = filteredOrders.filter(order => {
+    const totalItems = order.order_items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+    return !order.order_items || order.order_items.length === 0 || totalItems <= 0;
+  });
+
+  // ตรวจจับปัญหาใน shipments
+  const auditShipmentIssues = filteredShipments.filter(sh => {
+    const totalItems = sh.shipment_items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0;
+    return !sh.shipment_items || sh.shipment_items.length === 0 || totalItems <= 0;
+  });
 
   // ===== Data สำหรับกราฟ Product (Orders vs Shipments) =====
   const chartData = {
@@ -144,7 +199,7 @@ selectedBranch === "All"
   };
 
   // ===== Data สำหรับกราฟ Branch-wise (Product) =====
-  const branchLabels = branchShipmentSummaryComputed.map((b) => b.toBranch);
+  const branchLabels = branchShipmentSummaryComputed.map((b) => b.branchName);
   const branchQuantities = branchShipmentSummaryComputed.map((b) => b.totalQuantity);
   const branchChartData = {
     labels: branchLabels,
@@ -184,7 +239,7 @@ selectedBranch === "All"
         text:
           selectedBranch === "All"
             ? "Finance Summary for All Branches"
-            : `Finance Summary for Branch ${selectedBranch}`,
+            : `Finance Summary for Branch ${branchMap[selectedBranch] || selectedBranch}`,
       },
     },
   };
@@ -209,10 +264,11 @@ selectedBranch === "All"
         theme: "striped",
       });
       let finalY = doc.lastAutoTable.finalY + 30;
+
       doc.text("Shipment Report", 20, finalY);
       const shipmentTableColumns = ["Shipment ID", "From", "To", "Status", "Items"];
       const shipmentTableRows = filteredShipments.map((sh) => {
-        const count = sh.items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+        const count = sh.shipment_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
         return [sh.shipment_id, sh.from_branch_id, sh.to_branch_id, sh.status, count];
       });
       doc.autoTable({
@@ -222,12 +278,13 @@ selectedBranch === "All"
         margin: { left: 20 },
         theme: "striped",
       });
+
       if (selectedBranch === "All") {
         let finalY2 = doc.lastAutoTable.finalY + 30;
         doc.text("POS Branch-wise Shipments", 20, finalY2);
         const branchColumns = ["Branch", "Shipments Count", "Total Quantity"];
         const branchRows = branchShipmentSummaryComputed.map((b) => [
-          b.toBranch,
+          b.branchName,
           b.shipmentsCount,
           b.totalQuantity,
         ]);
@@ -239,17 +296,77 @@ selectedBranch === "All"
           theme: "striped",
         });
       }
-    } else {
-      // Finance export
+
+    } else if (filterType === "Finance") {
       doc.text("Finance Report", 20, 60);
       if (selectedBranch === "All") {
         doc.text(`Orders Finance Amount: ${ordersFinance}`, 20, 80);
         doc.text(`Shipments Finance Amount: ${shipmentsFinance}`, 20, 100);
-        doc.text(`Combined Finance Amount: ${combinedFinance}`, 20, 120);
+        doc.text(`Combined Finance Amount: ${ordersFinance + shipmentsFinance}`, 20, 120);
       } else {
-        doc.text(`Orders Finance Amount for Branch ${selectedBranch}: ${ordersFinance}`, 20, 80);
-        doc.text(`Shipments Finance Amount for Branch ${selectedBranch}: ${shipmentsFinance}`, 20, 100);
-        doc.text(`Combined Finance Amount: ${combinedFinance}`, 20, 120);
+        doc.text(
+          `Orders Finance Amount for Branch ${branchMap[selectedBranch] || selectedBranch}: ${ordersFinance}`,
+          20,
+          80
+        );
+        doc.text(
+          `Shipments Finance Amount for Branch ${branchMap[selectedBranch] || selectedBranch}: ${shipmentsFinance}`,
+          20,
+          100
+        );
+        doc.text(`Combined Finance Amount: ${ordersFinance + shipmentsFinance}`, 20, 120);
+      }
+
+    } else if (filterType === "Audit") {
+      doc.text("Audit Report", 20, 60);
+      doc.text(
+        `Quantity Discrepancy (Orders - Shipments): ${totalOrderQuantity - totalShipmentQuantity}`,
+        20,
+        80
+      );
+      doc.text(
+        `Finance Discrepancy (Orders - Shipments): ${ordersFinance - shipmentsFinance}`,
+        20,
+        100
+      );
+
+      let finalY = 120;
+      doc.text("Orders with Issues", 20, finalY);
+      const orderIssueColumns = ["Order Number", "Status", "Item Count"];
+      const orderIssueRows = auditOrderIssues.map((ord) => {
+        const count = ord.order_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+        return [ord.order_number, ord.status, count];
+      });
+      if (orderIssueRows.length > 0) {
+        doc.autoTable({
+          head: [orderIssueColumns],
+          body: orderIssueRows,
+          startY: finalY + 10,
+          margin: { left: 20 },
+          theme: "striped",
+        });
+        finalY = doc.lastAutoTable.finalY + 30;
+      } else {
+        doc.text("No issues found in orders.", 20, finalY + 20);
+        finalY += 40;
+      }
+
+      doc.text("Shipments with Issues", 20, finalY);
+      const shipmentIssueColumns = ["Shipment ID", "From", "To", "Status", "Items"];
+      const shipmentIssueRows = auditShipmentIssues.map((sh) => {
+        const count = sh.shipment_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+        return [sh.shipment_id, sh.from_branch_id, sh.to_branch_id, sh.status, count];
+      });
+      if (shipmentIssueRows.length > 0) {
+        doc.autoTable({
+          head: [shipmentIssueColumns],
+          body: shipmentIssueRows,
+          startY: finalY + 10,
+          margin: { left: 20 },
+          theme: "striped",
+        });
+      } else {
+        doc.text("No issues found in shipments.", 20, finalY + 20);
       }
     }
     doc.save("X10_Reports.pdf");
@@ -273,7 +390,7 @@ selectedBranch === "All"
       const shipmentSheetData = [
         ["Shipment ID", "From", "To", "Status", "Items"],
         ...filteredShipments.map((sh) => {
-          const count = sh.items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+          const count = sh.shipment_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
           return [sh.shipment_id, sh.from_branch_id, sh.to_branch_id, sh.status, count];
         }),
       ];
@@ -283,20 +400,50 @@ selectedBranch === "All"
       if (selectedBranch === "All") {
         const branchSheetData = [
           ["Branch", "Shipments Count", "Total Quantity"],
-          ...branchShipmentSummaryComputed.map((b) => [b.toBranch, b.shipmentsCount, b.totalQuantity]),
+          ...branchShipmentSummaryComputed.map((b) => [b.branchName, b.shipmentsCount, b.totalQuantity]),
         ];
         const branchSheet = XLSX.utils.aoa_to_sheet(branchSheetData);
         XLSX.utils.book_append_sheet(workbook, branchSheet, "BranchWise");
       }
-    } else {
+
+    } else if (filterType === "Finance") {
       const financeSheetData = [
         ["Metric", "Amount"],
         ["Orders Finance Amount", ordersFinance],
         ["Shipments Finance Amount", shipmentsFinance],
-        ["Combined Finance Amount", combinedFinance],
+        ["Combined Finance Amount", ordersFinance + shipmentsFinance],
       ];
       const financeSheet = XLSX.utils.aoa_to_sheet(financeSheetData);
       XLSX.utils.book_append_sheet(workbook, financeSheet, "Finance");
+
+    } else if (filterType === "Audit") {
+      const auditSheetData = [
+        ["Audit Metric", "Value"],
+        ["Quantity Discrepancy (Orders - Shipments)", totalOrderQuantity - totalShipmentQuantity],
+        ["Finance Discrepancy (Orders - Shipments)", ordersFinance - shipmentsFinance],
+      ];
+      const auditSheet = XLSX.utils.aoa_to_sheet(auditSheetData);
+      XLSX.utils.book_append_sheet(workbook, auditSheet, "Audit Summary");
+
+      const orderIssueData = [
+        ["Order Number", "Status", "Item Count"],
+        ...auditOrderIssues.map((ord) => {
+          const count = ord.order_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+          return [ord.order_number, ord.status, count];
+        }),
+      ];
+      const orderIssueSheet = XLSX.utils.aoa_to_sheet(orderIssueData);
+      XLSX.utils.book_append_sheet(workbook, orderIssueSheet, "Order Issues");
+
+      const shipmentIssueData = [
+        ["Shipment ID", "From", "To", "Status", "Items"],
+        ...auditShipmentIssues.map((sh) => {
+          const count = sh.shipment_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+          return [sh.shipment_id, sh.from_branch_id, sh.to_branch_id, sh.status, count];
+        }),
+      ];
+      const shipmentIssueSheet = XLSX.utils.aoa_to_sheet(shipmentIssueData);
+      XLSX.utils.book_append_sheet(workbook, shipmentIssueSheet, "Shipment Issues");
     }
 
     const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
@@ -320,20 +467,16 @@ selectedBranch === "All"
             >
               <option value="Product">Product</option>
               <option value="Finance">Finance</option>
+              <option value="Audit">Audit</option>
             </select>
           </label>
           <label>
             Branch:{" "}
             <select value={selectedBranch} onChange={(e) => setSelectedBranch(e.target.value)}>
               <option value="All">All</option>
-              {Array.from(
-                new Set([
-                  ...orders.map((o) => o.branch_id),
-                  ...shipments.map((s) => s.to_branch_id),
-                ])
-              ).map((branch) => (
-                <option key={branch} value={branch}>
-                  {branch}
+              {branches.map((branch) => (
+                <option key={branch.branch_id} value={branch.branch_id}>
+                  {branch.b_name}
                 </option>
               ))}
             </select>
@@ -346,8 +489,9 @@ selectedBranch === "All"
       </div>
 
       <div className="reports-content">
-        {filterType === "Product" ? (
+        {filterType === "Product" && (
           <>
+            {/* รายงาน Product */}
             <div className="left-column">
               <div className="report-card">
                 <h3>Order Report</h3>
@@ -373,37 +517,40 @@ selectedBranch === "All"
             <div className="right-column">
               {selectedBranch === "All" && (
                 <div className="branch-summary-section">
-                <h3>POS Branch-wise Shipments</h3>
-                <table className="branch-shipment-table">
-                  <thead>
-                    <tr>
-                      <th>Branch</th>
-                      <th>Shipments Count</th>
-                      <th>Total Quantity</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {branchShipmentSummaryComputed.length > 0 ? (
-                      branchShipmentSummaryComputed.map((b, idx) => (
-                        <tr key={idx}>
-                          <td>{b.toBranch}</td>
-                          <td>{b.shipmentsCount}</td>
-                          <td>{b.totalQuantity}</td>
-                        </tr>
-                      ))
-                    ) : (
+                  <h3>POS Branch-wise Shipments</h3>
+                  <table className="branch-shipment-table">
+                    <thead>
                       <tr>
-                        <td colSpan="3">No POS branch shipments found.</td>
+                        <th>Branch</th>
+                        <th>Shipments Count</th>
+                        <th>Total Quantity</th>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {branchShipmentSummaryComputed.length > 0 ? (
+                        branchShipmentSummaryComputed.map((b, idx) => (
+                          <tr key={idx}>
+                            <td>{b.branchName}</td>
+                            <td>{b.shipmentsCount}</td>
+                            <td>{b.totalQuantity}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="3">No POS branch shipments found.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </>
-        ) : (
+        )}
+
+        {filterType === "Finance" && (
           <>
+            {/* รายงาน Finance */}
             <div className="left-column">
               <div className="report-card">
                 <h3>Finance Summary</h3>
@@ -411,13 +558,19 @@ selectedBranch === "All"
                   <>
                     <p>Orders Finance Amount: {ordersFinance}</p>
                     <p>Shipments Finance Amount: {shipmentsFinance}</p>
-                    <p>Combined Finance Amount: {combinedFinance}</p>
+                    <p>Combined Finance Amount: {ordersFinance + shipmentsFinance}</p>
                   </>
                 ) : (
                   <>
-                    <p>Orders Finance Amount for Branch {selectedBranch}: {ordersFinance}</p>
-                    <p>Shipments Finance Amount for Branch {selectedBranch}: {shipmentsFinance}</p>
-                    <p>Combined Finance Amount: {combinedFinance}</p>
+                    <p>
+                      Orders Finance Amount for Branch {branchMap[selectedBranch] || selectedBranch}:{" "}
+                      {ordersFinance}
+                    </p>
+                    <p>
+                      Shipments Finance Amount for Branch {branchMap[selectedBranch] || selectedBranch}:{" "}
+                      {shipmentsFinance}
+                    </p>
+                    <p>Combined Finance Amount: {ordersFinance + shipmentsFinance}</p>
                   </>
                 )}
               </div>
@@ -425,6 +578,83 @@ selectedBranch === "All"
             <div className="center-column">
               <div className="chart-section">
                 <Bar data={financeChartData} options={financeChartOptions} />
+              </div>
+            </div>
+          </>
+        )}
+
+        {filterType === "Audit" && (
+          <>
+            {/* รายงาน Audit */}
+            <div className="left-column">
+              <div className="report-card">
+                <h3>Audit Summary</h3>
+                <p>Quantity Discrepancy (Orders - Shipments): {totalOrderQuantity - totalShipmentQuantity}</p>
+                <p>Finance Discrepancy (Orders - Shipments): {ordersFinance - shipmentsFinance}</p>
+              </div>
+            </div>
+            <div className="center-column">
+              <div className="audit-details">
+                <h3>Orders with Issues</h3>
+                {auditOrderIssues.length > 0 ? (
+                  <table className="audit-table">
+                    <thead>
+                      <tr>
+                        <th>Order Number</th>
+                        <th>Status</th>
+                        <th>Item Count</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {auditOrderIssues.map((ord, idx) => {
+                        const count = ord.order_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+                        return (
+                          <tr key={idx}>
+                            <td>{ord.order_number}</td>
+                            <td>{ord.status}</td>
+                            <td>{count}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p>No issues found in orders.</p>
+                )}
+              </div>
+            </div>
+            <div className="right-column">
+              <div className="audit-details">
+                <h3>Shipments with Issues</h3>
+                {auditShipmentIssues.length > 0 ? (
+                  <table className="audit-table">
+                    <thead>
+                      <tr>
+                        <th>Shipment ID</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Status</th>
+                        <th>Items</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {auditShipmentIssues.map((sh, idx) => {
+                        const count = sh.shipment_items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+                        return (
+                          <tr key={idx}>
+                            <td>{sh.shipment_id}</td>
+                            <td>{sh.from_branch_id}</td>
+                            <td>{sh.to_branch_id}</td>
+                            <td>{sh.status}</td>
+                            <td>{count}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p>No issues found in shipments.</p>
+                )}
               </div>
             </div>
           </>
