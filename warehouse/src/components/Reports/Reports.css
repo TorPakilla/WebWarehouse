@@ -1,87 +1,136 @@
 /* Reports.css */
 
+:root {
+  --bg-main: #2b2b2b;
+  --bg-secondary: #3a3a3a;
+  --bg-accent: #1e1e1e;
+  --border-color: #555;
+  --border-color-light: #666;
+  --text-main: #fff;
+  --text-accent: #ffd700;
+  --highlight: #ffcc00;
+  --btn-bg: #444;
+  --btn-bg-hover: #666;
+}
+
 .reports-container {
-  background: #2b2b2b;
-  color: #fff;
+  background: var(--bg-main);
+  color: var(--text-main);
   padding: 20px;
   border-radius: 8px;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .reports-header {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-color-light);
+  padding-bottom: 10px;
 }
 
 .reports-header h2 {
   font-size: 1.8rem;
   margin: 0;
-  color: #ffcc00;
+  color: var(--highlight);
+}
+
+.filter-dropdowns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.filter-dropdowns label {
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+
+.filter-dropdowns select {
+  margin-left: 5px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color-light);
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  transition: border 0.3s ease;
+}
+
+.filter-dropdowns select:focus {
+  outline: none;
+  border-color: var(--highlight);
 }
 
 .export-buttons {
   display: flex;
   gap: 10px;
+  margin-top: 10px;
 }
 
 .export-buttons button {
-  background: #444;
-  border: 1px solid #999;
-  color: #fff;
+  background: var(--btn-bg);
+  border: 1px solid var(--border-color-light);
+  color: var(--text-main);
   padding: 8px 14px;
   border-radius: 4px;
   cursor: pointer;
   font-weight: 500;
-}
-.export-buttons button:hover {
-  background: #666;
+  transition: background 0.3s ease, transform 0.2s ease;
 }
 
-/* Layout 3 คอลัมน์ */
+.export-buttons button:hover {
+  background: var(--btn-bg-hover);
+  transform: translateY(-2px);
+}
+
+/* Layout แบบ 3 คอลัมน์ */
 .reports-content {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   gap: 20px;
 }
 
 /* left-column, center-column, right-column */
-.left-column {
-  flex: 0.7; /* ปรับตามต้องการ */
+.left-column,
+.center-column,
+.right-column {
   display: flex;
   flex-direction: column;
   gap: 15px;
 }
 
+.left-column {
+  flex: 0.7;
+}
+
 .center-column {
-  flex: 1; /* กว้างสุด */
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  flex: 1;
 }
 
 .right-column {
   flex: 0.7;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
 }
 
-/* การ์ด */
+/* การ์ดรายงาน */
 .report-card {
-  background: #3a3a3a;
-  border: 1px solid #555;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 15px;
   min-height: 100px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .report-card h3 {
   margin-top: 0;
-  color: #ffd700;
+  color: var(--text-accent);
   font-size: 1.3rem;
   margin-bottom: 10px;
 }
@@ -94,24 +143,25 @@
 
 /* ส่วนกราฟ */
 .chart-section {
-  background: #1e1e1e;
-  border: 1px solid #444;
+  background: var(--bg-accent);
+  border: 1px solid var(--btn-bg);
   border-radius: 6px;
   padding: 15px;
-  min-height: 200px; /* กันกรณีกราฟเตี้ยไป */
+  min-height: 200px;
 }
 
 /* ตาราง POS Branch-wise */
 .branch-summary-section {
-  background: #3a3a3a;
-  border: 1px solid #555;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
   padding: 15px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .branch-summary-section h3 {
   margin-top: 0;
-  color: #ffd700;
+  color: var(--text-accent);
   margin-bottom: 10px;
 }
 
@@ -123,13 +173,39 @@
 
 .branch-shipment-table th,
 .branch-shipment-table td {
-  border: 1px solid #666;
+  border: 1px solid var(--border-color-light);
   padding: 8px;
   text-align: left;
+  font-size: 0.9rem;
 }
 
 .branch-shipment-table th {
-  background: #444;
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* ตารางใบเสร็จและ Audit */
+.receipt-table,
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.receipt-table th,
+.receipt-table td,
+.audit-table th,
+.audit-table td {
+  border: 1px solid var(--border-color-light);
+  padding: 8px;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.receipt-table th,
+.audit-table th {
+  background: var(--btn-bg);
+  color: var(--text-main);
   font-weight: 600;
 }

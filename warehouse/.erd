@@ -1,0 +1,87 @@
+[Branches]
+*branch_id {uuid} PK
+b_name {string}
+location {string}
+image_url {string}
+
+[Employees]
+*employees_id {uuid} PK
+username {string}
+password {string}
+name {string}
+role {string}
+salary {float}
+created_at {datetime}
+branch_id {uuid} FK
+
+[Product]
+*product_id {uuid} PK
+product_name {string}
+description {string}
+image {binary}
+created_at {datetime}
+
+[ProductUnit]
+*product_unit_id {uuid} PK
+product_id {uuid} FK
+type {string}
+initial_quantity {int}
+convers_rate {int}
+
+[Inventory]
+*inventory_id {uuid} PK
+product_id {uuid} FK
+branch_id {uuid} FK
+quantity {int}
+price {float}
+
+[Supplier]
+*supplier_id {uuid} PK
+name {string}
+product_id {uuid}
+price_pallet {float}
+
+[ProductSupplier]
+*id {uuid} PK
+supplier_id {uuid} FK
+product_id {uuid}
+
+[Order]
+*order_id {uuid} PK
+order_number {string}
+status {string}
+supplier_id {uuid} FK
+employees_id {uuid} FK
+total_amount {float}
+
+[OrderItem]
+*order_item_id {uuid} PK
+order_id {uuid} FK
+product_id {uuid} FK
+quantity {int}
+convers_rate {float}
+
+[Shipment]
+*shipment_id {uuid} PK
+shipment_number {string}
+from_branch_id {uuid}
+to_branch_id {uuid}
+
+[ShipmentItem]
+*shipment_list_id {uuid} PK
+shipment_id {uuid} FK
+warehouse_inventory_id {string}
+pos_inventory_id {string}
+product_unit_id {uuid} FK
+status {string}
+quantity {int}
+
+# Relationships
+Branches ||--o{ Employees : has
+Branches ||--o{ Inventory : has
+Product ||--o{ ProductUnit : has
+Product ||--o{ Inventory : has
+Supplier ||--o{ ProductSupplier : has
+Order ||--o{ OrderItem : has
+Shipment ||--o{ ShipmentItem : has
+ProductUnit ||--o{ ShipmentItem : has

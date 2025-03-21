@@ -5,7 +5,8 @@ import X10 from "../styles/X10.png";
 import MapComponent from "../components/MapComponent";
 import "../components/DashBoard/PopupDashboard.css";
 import "mapbox-gl/dist/mapbox-gl.css";
-
+import "../components/DashBoard/PopupDashboard.css";
+import ManageOrders from "../components/Orders/ManageOrders"; 
 // ===== Import ManageReports =====
 import ManageReports from "../components/Reports/ManageReports";
 import ManageSuppliers from "../components/Suppliers/ManageSuppliers.js";
@@ -250,6 +251,28 @@ const Dashboard = () => {
     fetchData();
   }, [token]);
 
+  // เมื่อเปลี่ยนแปลงค่า selectedSupplier ให้ดึงข้อมูลสินค้าของ Supplier นั้น
+  useEffect(() => {
+    if (selectedSupplier) {
+      // แก้เป็นเรียก /ProductsBySupplier?supplier_id=xxx
+      axios
+        .get(`${API_BASE_URL}/ProductsBySupplier?supplier_id=${selectedSupplier}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((res) => {
+          setFilteredProductsBySupplier(res.data.products || []);
+          // Reset selected product เมื่อเปลี่ยน supplier
+          setSelectedProduct("");
+        })
+        .catch((error) => {
+          console.error("Error fetching supplier products:", error);
+          setFilteredProductsBySupplier([]);
+        });
+    } else {
+      setFilteredProductsBySupplier([]);
+    }
+  }, [selectedSupplier, token]);
+
   // Filter POS Low Stock ตาม Branch/Category
   useEffect(() => {
     let filtered = posLowStock;
@@ -460,7 +483,8 @@ const Dashboard = () => {
         initial_quantity: productFormData.quantity,
       };
       if (editingProduct) {
-        await axios.patch(`${API_BASE_URL}/Product/${editingProduct.id}`, productPayload, {
+        // ใช้ PUT แทน PATCH
+        await axios.put(`${API_BASE_URL}/Product/${editingProduct.id}`, productPayload, {
           headers: { Authorization: `Bearer ${token}` },
         });
         alert("Product updated successfully!");
@@ -470,6 +494,7 @@ const Dashboard = () => {
         });
         alert("Product created successfully!");
       }
+
       await fetchInventoryData();
       setProductFormData({ product_name: "", category: "", type: "", price: 0, quantity: 0 });
       setEditingProduct(null);
@@ -605,13 +630,12 @@ const Dashboard = () => {
       return systemCards;
     } else if (role === "Stock") {
       return systemCards.filter(
-        (system) =>
-          system.name === "Manage Orders" || system.name === "Manage Shipments"
+        (system) => system.name === "Manage Orders" || system.name === "Manage Shipments"
       );
-    } else if (role === "Audit") {
+    } else if (role === "Audit" || role === "Account") {
       return systemCards.filter((system) => system.name === "Manage Reports");
     } else if (role === "Manager") {
-      return systemCards; // Managerเห็นทุกระบบใน overlay แต่ใน dropdown branches ให้กรองตามสาขาของตัวเอง
+      return systemCards; // Manager เห็นทุกระบบใน overlay แต่ใน dropdown branches ให้กรองตามสาขาของตัวเอง
     }
     return [];
   };
@@ -621,196 +645,26 @@ const Dashboard = () => {
     switch (openPopup?.name) {
       case "Manage Orders":
         return (
-          <div className="modal-body">
-            {/* Content สำหรับ Manage Orders */}
-            <div className="modal-section divider" style={{ flex: "0 0 25%" }}>
-              <h4>Create New Order</h4>
-              {/* Form สร้าง Order */}
-              <div className="form-group">
-                <label>Supplier</label>
-                <select
-                  value={selectedSupplier}
-                  onChange={(e) => setSelectedSupplier(e.target.value)}
-                >
-                  <option value="">Select Supplier</option>
-                  {suppliers.map((sup) => (
-                    <option key={sup.supplier_id} value={sup.supplier_id}>
-                      {sup.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Product</label>
-                <select
-                  value={selectedProduct}
-                  onChange={(e) => {
-                    const productId = e.target.value;
-                    setSelectedProduct(productId);
-                    const foundProduct = filteredProductsBySupplier.find(
-                      (p) => p.product_id === productId
-                    );
-                    setSelectedCategoryLabel(foundProduct?.category || "");
-                  }}
-                  disabled={!selectedSupplier}
-                >
-                  <option value="">Select Product</option>
-                  {filteredProductsBySupplier.map((prod) => (
-                    <option key={prod.product_id} value={prod.product_id}>
-                      {prod.product_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Quantity</label>
-                <input
-                  type="number"
-                  value={quantity}
-                  min="1"
-                  onChange={(e) => setQuantity(parseInt(e.target.value))}
-                />
-              </div>
-              <button
-                className="modal-button"
-                onClick={() => {
-                  if (selectedProduct && quantity > 0 && selectedSupplier) {
-                    const productObj = filteredProductsBySupplier.find(
-                      (p) => p.product_id === selectedProduct
-                    );
-                    if (productObj) {
-                      setOrderItems((prev) => [
-                        ...prev,
-                        {
-                          product_id: productObj.product_id,
-                          product_name: productObj.product_name,
-                          quantity,
-                        },
-                      ]);
-                      setSelectedProduct("");
-                      setQuantity(1);
-                    }
-                  }
-                }}
-              >
-                <FaPlus /> Add to Order
-              </button>
-              {orderItems.length > 0 && (
-                <div className="order-items-list">
-                  <h4>Order Items</h4>
-                  <ul>
-                    {orderItems.map((item, index) => (
-                      <li key={index}>
-                        {item.product_name} x {item.quantity}
-                        <FaTrash
-                          style={{ cursor: "pointer", marginLeft: "5px" }}
-                          onClick={() =>
-                            setOrderItems((prev) =>
-                              prev.filter((_, i) => i !== index)
-                            )
-                          }
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                  <button
-                    className="modal-button"
-                    onClick={async () => {
-                      if (orderItems.length === 0) {
-                        alert("Please add at least one product to the order.");
-                        return;
-                      }
-                      try {
-                        const orderData = {
-                          supplier_id: selectedSupplier,
-                          order_items: orderItems.map((item) => ({
-                            productid: item.product_id,
-                            quantity: item.quantity,
-                            unitprice: 0,
-                          })),
-                        };
-                        await axios.post(`${API_BASE_URL}/Orders`, orderData, {
-                          headers: { Authorization: `Bearer ${token}` },
-                        });
-                        alert("Order created successfully!");
-                        setSelectedSupplier("");
-                        setSelectedProduct("");
-                        setQuantity(1);
-                        setOrderItems([]);
-                      } catch (error) {
-                        console.error("Error creating order:", error);
-                        alert("Failed to create order.");
-                      }
-                    }}
-                  >
-                    Create Order
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className="modal-section divider pending-orders-column">
-              <h4>Pending Orders</h4>
-              {popupData && popupData.pendingOrders ? (
-                popupData.pendingOrders.length > 0 ? (
-                  <ul className="pending-orders-list">
-                    {popupData.pendingOrders.map((order) => (
-                      <li key={order.order_id} className="pending-order-item">
-                        <FaClipboardList className="order-icon" />
-                        <span className="order-text">
-                          {order.order_number} - {order.status}
-                        </span>
-                        <button
-                          className="status-button approve"
-                          onClick={() =>
-                            handleUpdateOrderStatus(order.order_id, "Approved")
-                          }
-                        >
-                          <FaCheck />
-                        </button>
-                        <button
-                          className="status-button reject"
-                          onClick={() =>
-                            handleUpdateOrderStatus(order.order_id, "Rejected")
-                          }
-                        >
-                          <FaTimes />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No pending orders.</p>
-                )
-              ) : (
-                <p>Loading or no data available.</p>
-              )}
-            </div>
-
-            <div className="modal-section category-panel" style={{ flex: "0 0 30%" }}>
-              <h4>All Categories</h4>
-              <div className="all-categories-grid">
-                {posCategories.map((cat, index) => {
-                  const categoryIcon = getCategoryIcon(cat);
-                  return (
-                    <div key={index} className="category-item">
-                      {categoryIcon.type === "image" ? (
-                        <img
-                          src={categoryIcon.value}
-                          alt={cat}
-                          className="category-icon-Dashboard"
-                          style={{ width: "26px", height: "26px" }}
-                        />
-                      ) : (
-                        <categoryIcon.value size={26} />
-                      )}
-                      <div className="category-item-text">{cat.toUpperCase()}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+          <ManageOrders
+            popupData={popupData}
+            setPopupData={setPopupData}
+            suppliers={suppliers}
+            selectedSupplier={selectedSupplier}
+            setSelectedSupplier={setSelectedSupplier}
+            filteredProductsBySupplier={filteredProductsBySupplier}
+            selectedProduct={selectedProduct}
+            setSelectedProduct={setSelectedProduct}
+            selectedCategoryLabel={selectedCategoryLabel}
+            setSelectedCategoryLabel={setSelectedCategoryLabel}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            orderItems={orderItems}
+            setOrderItems={setOrderItems}
+            handleUpdateOrderStatus={handleUpdateOrderStatus}
+            token={token}
+            posCategories={posCategories}
+            getCategoryIcon={getCategoryIcon}
+          />
         );
 
       case "Manage Suppliers":
@@ -821,38 +675,59 @@ const Dashboard = () => {
         );
 
       case "Manage Products":
+        // Define reusable style objects
+        const modalBodyStyle = {
+          display: "grid",
+          gridTemplateColumns: "auto 300px",
+          gridTemplateRows: "auto 120px",
+          gap: "10px",
+          height: "100%",
+        };
+
+        const leftMiddleContainerStyle = {
+          gridColumn: "1",
+          gridRow: "1",
+          display: "flex",
+          flexDirection: "row",
+          gap: "10px",
+          overflow: "hidden",
+        };
+
+        const formSectionStyle = {
+          flex: "0 0 35%",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+        };
+
+        const pendingOrdersColumnStyle = {
+          flex: 1,
+          overflowY: "auto",
+        };
+
+        const categoriesContainerStyle = {
+          gridColumn: "2",
+          gridRow: "1 / 3",
+          overflowY: "auto",
+        };
+
+        const summaryContainerStyle = {
+          gridColumn: "1",
+          gridRow: "2",
+          border: "1px solid #ffcc00",
+          borderRadius: "8px",
+          padding: "10px",
+          display: "flex",
+          gap: "20px",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+        };
+
         return (
-          <div
-            className="modal-body product-popup-content"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "auto 300px",
-              gridTemplateRows: "auto 120px",
-              gap: "10px",
-              height: "100%",
-            }}
-          >
+          <div className="modal-body product-popup-content" style={modalBodyStyle}>
             {/* ซ้าย: Form สร้าง/แก้ไขสินค้า และรายการสินค้าใน Category */}
-            <div
-              className="left-middle-container"
-              style={{
-                gridColumn: "1",
-                gridRow: "1",
-                display: "flex",
-                flexDirection: "row",
-                gap: "10px",
-                overflow: "hidden",
-              }}
-            >
-              <div
-                className="modal-section divider"
-                style={{
-                  flex: "0 0 35%",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "10px",
-                }}
-              >
+            <div className="left-middle-container" style={leftMiddleContainerStyle}>
+              <div className="modal-section divider" style={formSectionStyle}>
                 <div className="header-row-for-form">
                   <h4>{editingProduct ? "Edit Product" : "Create New Product"}</h4>
                   <button className="modal-button add-product-button" onClick={handleProductSubmit}>
@@ -932,16 +807,12 @@ const Dashboard = () => {
                 </div>
               </div>
               {/* ขวา: รายการสินค้าใน Category */}
-              <div
-                className="modal-section divider pending-orders-column"
-                style={{
-                  flex: "1",
-                  overflowY: "auto",
-                }}
-              >
+              <div className="modal-section divider pending-orders-column" style={pendingOrdersColumnStyle}>
                 <h4>
                   Products in{" "}
-                  {selectedProductPopupCategory ? selectedProductPopupCategory.toUpperCase() : "All"}
+                  {selectedProductPopupCategory
+                    ? selectedProductPopupCategory.toUpperCase()
+                    : "All"}
                 </h4>
                 {selectedProductPopupCategory ? (
                   <ul className="pending-orders-list">
@@ -983,14 +854,7 @@ const Dashboard = () => {
               </div>
             </div>
             {/* ส่วน Categories + Summary */}
-            <div
-              className="categories-container"
-              style={{
-                gridColumn: "2",
-                gridRow: "1 / 3",
-                overflowY: "auto",
-              }}
-            >
+            <div className="categories-container" style={categoriesContainerStyle}>
               <h4>Categories</h4>
               <div className="all-categories-grid">
                 {[...new Set([
@@ -1030,20 +894,7 @@ const Dashboard = () => {
                 })}
               </div>
             </div>
-            <div
-              className="summary-container"
-              style={{
-                gridColumn: "1",
-                gridRow: "2",
-                border: "1px solid #ffcc00",
-                borderRadius: "8px",
-                padding: "10px",
-                display: "flex",
-                gap: "20px",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-              }}
-            >
+            <div className="summary-container" style={summaryContainerStyle}>
               <div style={{ flex: 1 }}>
                 <h5>Warehouse Summary</h5>
                 {selectedProductPopupCategory &&
@@ -1067,35 +918,39 @@ const Dashboard = () => {
               </div>
               <div style={{ flex: 1 }}>
                 <h5>POS Summary</h5>
-                {selectedProductPopupCategory ? (() => {
-                  const posItems = posLowStock.filter(
-                    (item) => item.category.toLowerCase() === selectedProductPopupCategory
-                  );
-                  const uniquePos = [
-                    ...new Map(
-                      posItems.map((item) => [item.product_name.toLowerCase(), item])
-                    ).values(),
-                  ];
-                  const totalQty = uniquePos.reduce(
-                    (sum, item) => sum + (item.quantity || 0),
-                    0
-                  );
-                  const totalPrice = uniquePos.reduce(
-                    (sum, item) => sum + (item.price || 0),
-                    0
-                  );
-                  return (
-                    <p>
-                      Quantity: {totalQty} Price: {totalPrice > 0 ? totalPrice : "-"}
-                    </p>
-                  );
-                })() : (
-                  <p>No POS data.</p>
-                )}
+                {selectedProductPopupCategory
+                  ? (() => {
+                      const posItems = posLowStock.filter(
+                        (item) =>
+                          item.category.toLowerCase() === selectedProductPopupCategory
+                      );
+                      const uniquePos = [
+                        ...new Map(
+                          posItems.map((item) => [item.product_name.toLowerCase(), item])
+                        ).values(),
+                      ];
+                      const totalQty = uniquePos.reduce(
+                        (sum, item) => sum + (item.quantity || 0),
+                        0
+                      );
+                      const totalPrice = uniquePos.reduce(
+                        (sum, item) => sum + (item.price || 0),
+                        0
+                      );
+                      return (
+                        <p>
+                          Quantity: {totalQty} Price: {totalPrice > 0 ? totalPrice : "-"}
+                        </p>
+                      );
+                    })()
+                  : (
+                    <p>No POS data.</p>
+                  )}
               </div>
             </div>
           </div>
         );
+
       case "Manage Shipments":
         return (
           <div className="modal-body shipments-popup">
@@ -1301,7 +1156,10 @@ const Dashboard = () => {
                             <button onClick={() => handleBranchEdit(branch)} className="edit-btn">
                               Edit
                             </button>
-                            <button onClick={() => handleBranchDelete(branch.branch_id)} className="delete-btn">
+                            <button
+                              onClick={() => handleBranchDelete(branch.branch_id)}
+                              className="delete-btn"
+                            >
                               Delete
                             </button>
                           </td>

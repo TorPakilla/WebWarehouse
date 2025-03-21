@@ -319,7 +319,7 @@ const EmployeesPopup = () => {
                 employeesAccount.map((emp) => (
                   <div className="employee-box" key={emp.employees_id}>
                     <span className="employee-name">{emp.name}</span>
-                    <span className="employee-branch">Branch: {emp.branch_id}</span>
+                    <span className="employee-branch">Branch: {emp.b_name}</span>
                     <span className="employee-salary">Salary: {emp.salary}</span>
                     <div className="employee-actions">
                       <button onClick={() => handleEdit(emp)}>Edit</button>

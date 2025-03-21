@@ -321,7 +321,6 @@
 }
 
 /* ================= Manage Orders / Products: ตัวอย่างคลาสเสริม (ถ้าต้องการ) ================= */
-/* หากมี inline style ในส่วน Manage Orders/Products ก็สามารถสร้างคลาสเฉพาะได้เช่นกัน */
 /* ตัวอย่าง: */
 .modal-section-divider-25 {
   flex: 0 0 25%;
