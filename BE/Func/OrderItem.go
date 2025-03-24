@@ -32,7 +32,6 @@ func AddOrderItem(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "ไม่สามารถสร้างรายการคำสั่งซื้อได้: " + err.Error()})
 	}
 
-	// อัปเดตยอดรวมของ Order
 	if err := UpdateTotalAmount(db, req.OrderID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "ไม่สามารถอัปเดตยอดรวมได้: " + err.Error()})
 	}
@@ -52,7 +51,6 @@ func DeleteOrderItem(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "ไม่สามารถลบรายการคำสั่งซื้อได้: " + err.Error()})
 	}
 
-	// อัปเดตยอดรวมของ Order
 	if err := UpdateTotalAmount(db, orderItem.OrderID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "ไม่สามารถอัปเดตยอดรวมได้: " + err.Error()})
 	}

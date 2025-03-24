@@ -38,7 +38,7 @@ func AddShipmentItem(db *gorm.DB, c *fiber.Ctx) error {
 			log.Println("Shipment not found, creating new shipment:", req.ShipmentID)
 
 			newShipment := Models.Shipment{
-				ShipmentID:     req.ShipmentID, // ใช้ ShipmentID เดิม
+				ShipmentID:     req.ShipmentID,
 				ShipmentNumber: fmt.Sprintf("SH-%d", time.Now().UnixNano()),
 				FromBranchID:   req.FromBranchID,
 				ToBranchID:     req.ToBranchID,

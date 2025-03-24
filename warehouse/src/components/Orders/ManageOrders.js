@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaPlus, FaTrash, FaCheck, FaTimes, FaClipboardList } from "react-icons/fa";
 import axios from "../../api/config"; // import axios instance
 import { API_BASE_URL } from "../../api/config"; // import config
@@ -22,11 +22,34 @@ const ManageOrders = ({
   setOrderItems,
   handleUpdateOrderStatus,
   token,
-  // สำหรับ All Categories
-  posCategories,
+  // ไม่ใช้ posCategories อีกต่อไป
   getCategoryIcon,
 }) => {
-  // ฟังก์ชันสร้าง Order
+  // ===== State สำหรับดึง "หมวดหมู่จาก DB" (พร้อมข้อมูลย่อย) =====
+  const [dbCategories, setDbCategories] = useState([]);
+
+  // ===== useEffect เรียก API ดึงหมวดหมู่จาก DB =====
+  useEffect(() => {
+    const fetchCategoriesFromDB = async () => {
+      try {
+        // ตัวอย่างเรียก /inventory-by-category 
+        // (ให้ตรวจสอบให้ตรงกับเส้นทาง/endpoint ใน Go-Fiber ของคุณ)
+        const res = await axios.get(`${API_BASE_URL}/inventory-by-category`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data && res.data.categories) {
+          // โครงสร้าง JSON ที่ backend ส่งกลับ: { "categories": [...] }
+          setDbCategories(res.data.categories);
+        }
+      } catch (error) {
+        console.error("Error fetching categories from DB:", error);
+      }
+    };
+
+    fetchCategoriesFromDB();
+  }, [token]);
+
+  // ===== ฟังก์ชันสร้าง Order =====
   const createOrder = async () => {
     if (orderItems.length === 0) {
       alert("Please add at least one product to the order.");
@@ -202,22 +225,45 @@ const ManageOrders = ({
       {/* ====== คอลัมน์ขวา (All Categories) ====== */}
       <div className="right-column">
         <h4>All Categories</h4>
+
         <div className="all-categories-grid">
-          {posCategories.map((cat, index) => {
-            const categoryIcon = getCategoryIcon(cat);
+          {/* แทนที่จะใช้ posCategories.map(...) เราจะใช้ dbCategories.map(...) */}
+          {dbCategories.map((cat, index) => {
+            // cat.category = ชื่อหมวดหมู่ (string)
+            // cat.details = array ของสินค้า (หรือข้อมูลย่อย) จาก DB
+            const categoryIcon = getCategoryIcon(cat.category);
+
             return (
               <div key={index} className="category-item">
                 {categoryIcon.type === "image" ? (
                   <img
                     src={categoryIcon.value}
-                    alt={cat}
+                    alt={cat.category}
                     className="category-icon-Dashboard"
                     style={{ width: "26px", height: "26px" }}
                   />
                 ) : (
                   <categoryIcon.value size={26} />
                 )}
-                <div className="category-item-text">{cat.toUpperCase()}</div>
+
+                {/* แสดงชื่อหมวดหมู่ (category) */}
+                <div className="category-item-text">
+                  {cat.category ? cat.category.toUpperCase() : "UNKNOWN"}
+                </div>
+
+                {/* ===== ตัวอย่าง Tooltip (ข้อมูลย่อย) ===== */}
+                <div className="tooltip-text">
+                  {/* ถ้า details เป็น array ก็สามารถ map เพื่อแสดงแต่ละรายการได้ */}
+                  {Array.isArray(cat.details) && cat.details.length > 0 ? (
+                    cat.details.map((detail, idx) => (
+                      <div key={idx}>
+                        {detail.product_name} | Qty: {detail.quantity} | Price: {detail.price}
+                      </div>
+                    ))
+                  ) : (
+                    <div>No details</div>
+                  )}
+                </div>
               </div>
             );
           })}

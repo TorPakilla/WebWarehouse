@@ -7,14 +7,14 @@ import (
 	"gorm.io/gorm"
 )
 
-// Branches model (ตารางหลัก)
+// Branches
 type Branches struct {
 	BranchID uuid.UUID `gorm:"type:uuid;primaryKey" json:"branch_id"`
 	BName    string    `json:"b_name"`
 	Location string    `json:"location"`
 
 	ImageURL string `json:"image_url"`
-	// ไม่ต้องมี Foreign Key ไปยัง Employees
+
 	Employees []Employees `gorm:"foreignKey:BranchID;constraint:OnDelete:CASCADE" json:"employees"`
 }
 
@@ -27,7 +27,7 @@ func (s *Branches) BeforeCreate(tx *gorm.DB) (err error) {
 	return
 }
 
-// Employees model (พนักงานอ้างอิง Branches)
+// Employees
 type Employees struct {
 	EmployeesID uuid.UUID `gorm:"type:uuid;primaryKey" json:"employees_id"`
 	Username    string    `json:"username"`
@@ -128,15 +128,13 @@ type Order struct {
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 
-	// Relationships
-	OrderItems []OrderItem `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE" json:"order_items"` // OnDelete:CASCADE
+	OrderItems []OrderItem `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE" json:"order_items"`
 }
 
 func (Order) TableName() string {
 	return `"Order"`
 }
 
-// BeforeCreate sets a new UUID before creating the record
 func (s *Order) BeforeCreate(tx *gorm.DB) (err error) {
 	s.OrderID = uuid.New().String()
 	return
@@ -144,7 +142,7 @@ func (s *Order) BeforeCreate(tx *gorm.DB) (err error) {
 
 type OrderItem struct {
 	OrderItemID string    `gorm:"type:uuid;primaryKey" json:"order_item_id"`
-	OrderID     string    `gorm:"type:uuid;not null;constraint:OnDelete:CASCADE" json:"order_id"` // OnDelete:CASCADE
+	OrderID     string    `gorm:"type:uuid;not null;constraint:OnDelete:CASCADE" json:"order_id"`
 	ProductID   string    `gorm:"type:uuid;not null" json:"product_id"`
 	Quantity    int       `json:"quantity"`
 	ConversRate float64   `json:"convers_rate"`
@@ -172,7 +170,6 @@ type Shipment struct {
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
 
-	// Relationships
 	ShipmentItems []ShipmentItem `gorm:"foreignKey:ShipmentID;constraint:OnDelete:CASCADE" json:"shipment_items"`
 }
 

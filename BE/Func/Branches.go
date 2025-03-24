@@ -46,7 +46,7 @@ func UpdateBranches(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Branch ID is required"})
 	}
 
-	fmt.Println("Updating Branch ID:", id) // Debug log
+	fmt.Println("Updating Branch ID:", id)
 	var branch Models.Branches
 	if err := db.Where("branch_id = ?", id).First(&branch).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Branch not found"})
@@ -89,20 +89,17 @@ func getHighestRole(employees []Models.Employees) string {
 	return highestRole
 }
 
-// ดู สาขา แต่ตาม ID
 // ดู สาขา ตาม ID
 func FindBranches(db *gorm.DB, c *fiber.Ctx) error {
 	id := c.Params("id")
 	var branch Models.Branches
 
-	// 1) ดึงข้อมูล Branch ตัวจริงจากตาราง โดย Preload("Employees") เพื่อให้ได้ slice ของ Employees มาด้วย
 	if err := db.Preload("Employees").
 		Where("branch_id = ?", id).
 		First(&branch).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Branch not found"})
 	}
 
-	// 2) นับจำนวน Categories (ตามตัวอย่างเดิมนับ DISTINCT จากคอลัมน์ quantity ซึ่งอาจไม่ใช่ categories จริง ๆ ก็ได้)
 	var totalCategories int64
 	if err := db.Model(&Models.Inventory{}).
 		Where("branch_id = ?", id).
@@ -111,13 +108,11 @@ func FindBranches(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to count categories"})
 	}
 
-	// 3) หาผู้จัดการที่มี Role สูงสุด (God > Manager > Audit > Account > Stock)
 	manager := "No Employees"
 	if len(branch.Employees) > 0 {
 		manager = getHighestRole(branch.Employees)
 	}
 
-	// 4) สมมุติถ้าอยากนับ Total Items (จำนวนสินค้ารวม) ก็สามารถเพิ่มได้ เช่น:
 	var totalItems int64
 	if err := db.Model(&Models.Inventory{}).
 		Where("branch_id = ?", id).
@@ -126,14 +121,13 @@ func FindBranches(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to sum items"})
 	}
 
-	// 5) ส่งค่ากลับไป
 	return c.JSON(fiber.Map{
 		"branch": fiber.Map{
 			"b_name":      branch.BName,
 			"manager":     manager,
 			"categories":  totalCategories,
-			"total_items": totalItems,      // ถ้าอยากส่งด้วย
-			"location":    branch.Location, // หรือข้อมูลอื่น ๆ
+			"total_items": totalItems,
+			"location":    branch.Location,
 			"image_url":   branch.ImageURL,
 		},
 	})
@@ -178,7 +172,7 @@ func GetPOSInventory(posDB *gorm.DB, c *fiber.Ctx) error {
 
 	var inventoryItems []struct {
 		InventoryID string `json:"inventory_id"`
-		ProductID   string `json:"product_id"` // ใช้ product_id หลังจากการเปลี่ยนชื่อคอลัมน์
+		ProductID   string `json:"product_id"`
 		BranchID    string `json:"branch_id"`
 		Quantity    int    `json:"quantity"`
 		UpdatedAt   string `json:"updated_at"`
@@ -200,11 +194,10 @@ func GetPOSBranches(posDB *gorm.DB, c *fiber.Ctx) error {
 		BranchID       string `json:"branch_id"`
 		BName          string `json:"b_name"`
 		Location       string `json:"location"`
-		GoogleLocation string `json:"google_location"` // ใช้ชื่อฟิลด์ให้ตรงกับคอลัมน์จริง
+		GoogleLocation string `json:"google_location"`
 		ImageURL       string `json:"image_url"`
 	}
 
-	// เพิ่มการ select google_location เข้ามาด้วย
 	if err := posDB.Table("Branches").
 		Select("branch_id, b_name, location, google_location, image_url").
 		Find(&branches).Error; err != nil {
@@ -240,7 +233,7 @@ func GetWarehouseBranches(db *gorm.DB, c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"branches": branches})
 }
 
-// ✅ ฟังก์ชัน Upload รูปให้ Warehouse Branch
+// Upload รูปให้ Warehouse Branch
 func UploadBranchImage(db *gorm.DB, c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
@@ -270,7 +263,6 @@ func UploadBranchImage(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save file"})
 	}
 
-	// สมมุติว่าโดเมนของคุณ
 	imageURL := "http://localhost:5050/uploads/branches/" + newFileName
 
 	branch.ImageURL = imageURL
@@ -293,14 +285,12 @@ type PosBranch struct {
 	ImageURL       string `gorm:"column:image_url" json:"image_url"` // เพิ่มคอลัมน์ image_url
 }
 
-// ⚠️ ต้องไป ALTER TABLE "Branches" ใน POS DB ด้วย ให้มี column image_url (text/varchar)
 func UploadPosBranchImage(posDB *gorm.DB, c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Branch ID is required"})
 	}
 
-	// หา POS Branch จาก posDB
 	var branch PosBranch
 	if err := posDB.Table("Branches").
 		Where("branch_id = ?", id).
@@ -326,10 +316,8 @@ func UploadPosBranchImage(posDB *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save file"})
 	}
 
-	// สร้าง URL สำหรับรูป (สมมุติ https://example.com)
 	imageURL := "http://localhost:5050/uploads/pos_branches/" + newFileName
 
-	// อัปเดตฟิลด์ image_url ของตาราง Branches ใน posDB
 	branch.ImageURL = imageURL
 	if err := posDB.Table("Branches").
 		Where("branch_id = ?", id).

@@ -18,22 +18,19 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-// connectToDatabase establishes a connection to the database
 func connectToDatabase(host string, port int, user, password, dbname string) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 	return gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info), // ✅ เพิ่ม Logger
+		Logger: logger.Default.LogMode(logger.Info),
 	})
 }
 
 func main() {
-	// Load environment variables
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 
-	// Connect to Warehouse DB
 	warehouseHost := os.Getenv("WAREHOUSE_DB_HOST")
 	warehousePort, _ := strconv.Atoi(os.Getenv("WAREHOUSE_DB_PORT"))
 	warehouseUser := os.Getenv("WAREHOUSE_DB_USER")
@@ -71,35 +68,27 @@ func main() {
 	}
 	log.Println("Connected to POS database!")
 
-	// เริ่ม Scheduler สำหรับ Sync
 	go Func.StartSyncScheduler(db, posDB)
 
-	// สร้าง Fiber App
 	app := fiber.New()
 
-	// ================== CORS CONFIG ==================
-	// เพิ่ม PATCH และ OPTIONS ใน AllowMethods
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000", // หรือระบุ Origin เฉพาะที่ต้องการ
+		AllowOrigins: "http://localhost:3000",
 		AllowMethods: "GET,POST,PUT,DELETE,PATCH,OPTIONS",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
-	// ================================================
 
-	// Inject DB ลงใน Context
 	app.Use(func(c *fiber.Ctx) error {
 		c.Locals("db", db)
 		return c.Next()
 	})
 
-	// Migration ตัวอย่าง (หากมี)
 	if err != nil {
 		log.Fatal("❌ Failed to migrate Employees:", err)
 	}
 	log.Println("✅ Employees table migrated successfully!")
 
-	// ✅ Migration สำหรับตารางที่เหลือ
-	log.Println("🚀 Migrating related tables...")
+	log.Println("Migrating related tables...")
 	err = db.AutoMigrate(
 		// &Models.Branches{},
 		// &Models.Employees{},
@@ -118,13 +107,10 @@ func main() {
 	}
 	log.Println("✅ Migration completed successfully!")
 
-	// Static Files (ถ้ามี)
 	app.Static("/uploads", "./uploads")
 
-	// Routes
 	app.Post("/login", Authentication.Login)
 
-	// Protected Routes Example (ทดลอง)
 	app.Use("/protected", func(c *fiber.Ctx) error {
 		userName := c.Get("Authorization")
 		if userName == "" {
@@ -135,7 +121,6 @@ func main() {
 		return c.JSON(fiber.Map{"message": "You are authorized"})
 	})
 
-	// เรียกใช้งาน Route ของแต่ละส่วน
 	Func.EmployeesRoutes(app, db)
 	Func.BranchRoutes(app, db, posDB)
 	Func.ProductRouter(app, db, posDB)
@@ -146,7 +131,6 @@ func main() {
 	Func.ShipmentRoutes(app, db, posDB)
 	Func.ShipmentItemRoutes(app, db)
 
-	// Start server
 	log.Println("Starting server on port 5050...")
 	log.Fatal(app.Listen(":5050"))
 }

@@ -26,7 +26,7 @@ func (Inventory) TableName() string {
 }
 
 type Request struct {
-	RequestID    uuid.UUID `gorm:"column:request_id;primaryKey"` // Match shipment_id
+	RequestID    uuid.UUID `gorm:"column:request_id;primaryKey"`
 	FromBranchID string    `gorm:"column:from_branch_id"`
 	ToBranchID   string    `gorm:"column:to_branch_id"`
 	ProductID    string    `gorm:"column:product_id"`
@@ -268,7 +268,6 @@ func AutoUpdateShipments(db *gorm.DB) error {
 	return nil
 }
 
-// แคช RequestID ที่หาไม่เจอในรอบก่อนหน้า
 var notFoundRequests = make(map[uuid.UUID]bool)
 
 // อัปเดตสถานะของ Request ใน Warehouse ให้ตรงกับ POS
@@ -280,7 +279,6 @@ func SyncRequestStatusWithWarehouse(db *gorm.DB, posDB *gorm.DB) error {
 	}
 
 	for _, request := range requests {
-		// ข้าม RequestID ที่เคยหาไม่เจอในรอบก่อนหน้า
 		if notFoundRequests[request.RequestID] {
 			continue
 		}
@@ -288,12 +286,10 @@ func SyncRequestStatusWithWarehouse(db *gorm.DB, posDB *gorm.DB) error {
 		var shipment Models.Shipment
 
 		if err := db.Where("shipment_id = ?", request.RequestID).First(&shipment).Error; err != nil {
-			// เก็บ RequestID ที่หาไม่เจอเข้าไปในแคช
 			notFoundRequests[request.RequestID] = true
 			continue
 		}
 
-		// ดำเนินการอัปเดตตามปกติ
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			if shipment.Status == "Completed" {
 				return nil
@@ -335,7 +331,6 @@ func SyncRequestStatusWithWarehouse(db *gorm.DB, posDB *gorm.DB) error {
 			continue
 		}
 
-		// ลบ RequestID ออกจากแคช หากดำเนินการสำเร็จ
 		delete(notFoundRequests, request.RequestID)
 	}
 
@@ -414,7 +409,6 @@ func UpdateRequestStatus(posDB *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// คาดว่าต้องการอัปเดตเป็น complete หรือ reject
 		if body.Status != "complete" && body.Status != "reject" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "Status must be 'complete' or 'reject'",
@@ -456,22 +450,18 @@ func (PosShipment) TableName() string {
 	return "shipments"
 }
 
-// ตาราง "ShipmentItems" (POS DB)
 type PosShipmentItemWithProduct struct {
 	ShipmentItemID string `gorm:"column:shipment_item_id"`
 	ShipmentID     string `gorm:"column:shipment_id"`
 	ProductID      string `gorm:"column:product_id"`
 	Quantity       int    `gorm:"column:quantity"`
-	ProductName    string `gorm:"column:product_name"` // <-- ตรงนี้สำหรับ JOIN
+	ProductName    string `gorm:"column:product_name"`
 }
 
 func (PosShipmentItemWithProduct) TableName() string {
 	return "PosShipmentItemWithProduct"
 }
 
-// ==========================================
-// 2) Handler สำหรับ GET /POSShipments
-// ==========================================
 func GetAllPosShipments(posDB *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var shipments []PosShipment
@@ -481,18 +471,15 @@ func GetAllPosShipments(posDB *gorm.DB) fiber.Handler {
 				"error": "Failed to fetch shipments from POS DB",
 			})
 		}
-		// ส่งกลับเป็น JSON array ตรง ๆ
+
 		return c.JSON(shipments)
 	}
 }
 
-// ==========================================
-// 3) Handler สำหรับ GET /POSShipmentItems
-// ==========================================
 func GetAllPosShipmentItems(posDB *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var items []PosShipmentItemWithProduct
-		// ใส่ double quotes ให้ตรงกับชื่อ table/column ใน DB
+
 		if err := posDB.Table("\"ShipmentItems\"").
 			Select("\"ShipmentItems\".*, \"Products\".product_name").
 			Joins("JOIN \"Products\" ON \"Products\".product_id = \"ShipmentItems\".product_id").
@@ -505,10 +492,10 @@ func GetAllPosShipmentItems(posDB *gorm.DB) fiber.Handler {
 	}
 }
 
-// UpdatePosShipment อัปเดตสถานะของ POSShipment (table: shipments ใน POS DB)
+// UpdatePosShipment อัปเดตสถานะของ POSShipment
 func UpdatePosShipment(posDB *gorm.DB) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// อ่าน param :id
+
 		shipmentIDParam := c.Params("id")
 		shipmentUUID, err := uuid.Parse(shipmentIDParam)
 		if err != nil {
@@ -517,7 +504,6 @@ func UpdatePosShipment(posDB *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// อ่าน body JSON เช่น { "status": "complete" }
 		type bodyStruct struct {
 			Status string `json:"status"`
 		}
@@ -528,8 +514,6 @@ func UpdatePosShipment(posDB *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// สมมติอนุญาตให้แก้เป็น "complete", "reject" หรืออะไรก็แล้วแต่
-		// ปรับเงื่อนไขตามธุรกิจ
 		allowedStatuses := map[string]bool{"complete": true, "reject": true, "pending": true}
 		if !allowedStatuses[body.Status] {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -537,7 +521,6 @@ func UpdatePosShipment(posDB *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// หา shipment ในตาราง POS DB
 		var posShipment PosShipment
 		if err := posDB.Where("shipment_id = ?", shipmentUUID).First(&posShipment).Error; err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -545,7 +528,6 @@ func UpdatePosShipment(posDB *gorm.DB) fiber.Handler {
 			})
 		}
 
-		// อัปเดตสถานะ
 		posShipment.Status = body.Status
 		posShipment.UpdatedAt = time.Now()
 

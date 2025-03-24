@@ -47,7 +47,6 @@ func AddEmployees(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "BranchID not found"})
 	}
 
-	// Hash Password ก่อนบันทึก
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to hash password: " + err.Error()})
@@ -107,7 +106,6 @@ func UpdateEmployees(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON format: " + err.Error()})
 	}
 
-	// อัปเดตฟิลด์ที่ได้รับ
 	if req.Username != "" {
 		user.Username = req.Username
 	}
@@ -155,7 +153,6 @@ func DeleteEmployees(db *gorm.DB, c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"Deleted": "Succeed"})
 }
 
-// Routes สำหรับพนักงาน
 func EmployeesRoutes(app *fiber.App, db *gorm.DB) {
 	app.Get("/Employees", Authentication.AuthMiddleware, func(c *fiber.Ctx) error {
 		return LookEmployees(db, c)

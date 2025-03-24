@@ -2,233 +2,264 @@
    PopupOrder.css
    สำหรับ Manage Orders
 ========================= */
-.two-column-layout {
-    display: grid;
-    grid-template-columns: 500px auto;
-    gap: 10px;
-    flex: 1;
-    overflow: hidden;
-  }
-  
-  /* ----- คอลัมน์ซ้าย ----- */
-  .left-column {
-    display: flex;
-    flex-direction: column; /* เรียงบน-ล่าง */
-    gap: 10px;
-    background-color: #2a2a2a;
-    border-radius: 8px;
-    padding: 10px;
-    box-sizing: border-box;
-    /* ไม่ใส่ overflow-y: auto ที่นี่ เพื่อป้องกัน scrollbar ซ้อน */
-  }
-  
-  /* ส่วน Create New Order (อยู่บน) */
-  .create-order-section {
-    background-color: #2a2a2a;
-    border-radius: 8px;
-    padding: 10px;
-    box-sizing: border-box;
-  }
-  
-  /* ส่วน Pending Orders (อยู่ล่าง) */
-  .pending-orders-section {
-    background-color: #1e1e1e;
-    border-radius: 8px;
-    padding: 10px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    max-height: 300px;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
 
-  .pending-orders-section::-webkit-scrollbar {
-    display: none;
-  }
+/* ลดความกว้างคอลัมน์ซ้ายเป็น 300px และลด gap เป็น 8px */
+.two-column-layout {
+  display: grid;
+  grid-template-columns: 300px auto; /* เดิม 350px, ลดเหลือ 300px */
+  gap: 8px;                          /* เดิม 10px, ลดเหลือ 8px */
+}
+
+/* ----- คอลัมน์ซ้าย ----- */
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background-color: #2a2a2a;
+
+  /* กรอบขาว + ลด border-radius + ลด padding */
+  border: 2px solid #fff;
+  border-radius: 6px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+/* ส่วน Create New Order (อยู่บน) */
+.create-order-section {
+  background-color: #2a2a2a;
+  border-radius: 6px;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* ส่วน Pending Orders (อยู่ล่าง) */
+.pending-orders-section {
+  background-color: #1e1e1e;
+  border-radius: 6px;
+  padding: 8px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-height: 300px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.pending-orders-section::-webkit-scrollbar {
+  display: none;
+}
+
+/* ----- คอลัมน์ขวา (All Categories) ----- */
+.right-column {
+  background-color: #3e3e3e;
+  border: 2px solid #fff;
+  border-radius: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+/* =========================
+   ฟอร์ม Create New Order
+========================= */
+.form-group {
+  margin-bottom: 8px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: #ffcc00;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 6px;
+  background-color: #111;
+  border: 1px solid #ffcc00;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.modal-button {
+  background-color: #8b0000;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 5px;
+  transition: background-color 0.3s;
+  margin-top: 6px;
+}
+.modal-button:hover {
+  background-color: #ffcc00;
+  color: black;
+}
+
+/* Order Items List */
+.order-items-list {
+  margin-top: 8px;
+  background-color: #2a2a2a;
+  padding: 8px;
+  border-radius: 6px;
+}
+.order-items-list h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #ffcc00;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  padding-bottom: 4px;
+}
+.order-items-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.order-items-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px;
+  margin-bottom: 5px;
+  background-color: #1e1e1e;
+  border-radius: 4px;
+}
+.order-items-list li:hover {
+  background-color: #292929;
+}
+.order-items-list li .fa-trash {
+  color: #dc3545;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.order-items-list li .fa-trash:hover {
+  transform: scale(1.2);
+}
+
+/* Pending Orders List */
+.pending-orders-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+.pending-order-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #1e1e1e;
+  padding: 6px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  transition: background 0.3s;
+}
+.pending-order-item:hover {
+  background: #2a2a2a;
+}
+/* ปุ่ม Approve/Reject */
+.status-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-left: 4px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  transition: background-color 0.3s ease;
+}
+.status-button svg {
+  width: 14px;
+  height: 14px;
+}
+.status-button.approve {
+  background-color: #28a745;
+}
+.status-button.approve:hover {
+  background-color: #218838;
+}
+.status-button.reject {
+  background-color: #dc3545;
+}
+.status-button.reject:hover {
+  background-color: #c82333;
+}
+
+/* =========================
+   All Categories (คอลัมน์ขวา)
+========================= */
+.category-panel {
+  background-color: #2a2a2a;
+  border-radius: 6px;
+  padding: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+.category-panel h4 {
+  color: #ffcc00;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* ปรับให้ดูสวยงามขึ้น: แต่ละกล่องมีขนาดขั้นต่ำ 120px */
+.all-categories-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+
+.category-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #1e1e1e;
+  border-radius: 4px;
+  padding: 8px;
+  text-align: center;
+  transition: transform 0.3s, background-color 0.3s;
+}
+.category-item:hover {
+  transform: scale(1.05);
+  background-color: #2f2f2f;
+}
+.category-item-text {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #ffcc00;
+  font-weight: 500;
+}
+
+/* tooltip-text (ปรับให้ใหญ่ขึ้น + รองรับข้อความหลายบรรทัด) */
+.tooltip-text {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-5px);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
   
-  /* ----- คอลัมน์ขวา (All Categories) ----- */
-  .right-column {
-    background-color: #3e3e3e;
-    border-radius: 8px;
-    padding: 15px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    /* ถ้าไม่ต้องการ scrollbar ฝั่งขวา ก็ไม่ต้องตั้ง overflow-y */
-  }
-  
-  /* =========================
-     ฟอร์ม Create New Order
-  ========================= */
-  .form-group {
-    margin-bottom: 10px;
-  }
-  
-  .form-group label {
-    display: block;
-    font-size: 13px;
-    color: #ffcc00;
-    margin-bottom: 4px;
-    font-weight: bold;
-  }
-  
-  .form-group input,
-  .form-group select {
-    width: 100%;
-    padding: 6px;
-    background-color: #111;
-    border: 1px solid #ffcc00;
-    border-radius: 4px;
-    color: #fff;
-    font-size: 14px;
-    box-sizing: border-box;
-  }
-  
-  .modal-button {
-    background-color: #8b0000;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-weight: bold;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-    margin-top: 6px;
-  }
-  
-  .modal-button:hover {
-    background-color: #ffcc00;
-    color: black;
-  }
-  
-  /* Order Items List */
-  .order-items-list {
-    margin-top: 10px;
-    background-color: #2a2a2a;
-    padding: 10px;
-    border-radius: 8px;
-  }
-  .order-items-list h4 {
-    margin: 0 0 8px;
-    font-size: 14px;
-    color: #ffcc00;
-    text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-    padding-bottom: 5px;
-  }
-  .order-items-list ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .order-items-list li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 8px;
-    margin-bottom: 5px;
-    background-color: #1e1e1e;
-    border-radius: 5px;
-  }
-  .order-items-list li:hover {
-    background-color: #292929;
-  }
-  .order-items-list li .fa-trash {
-    color: #dc3545;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  .order-items-list li .fa-trash:hover {
-    transform: scale(1.2);
-  }
-  
-  /* Pending Orders List */
-  .pending-orders-list {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-  }
-  .pending-order-item {
-    display: flex;
-    align-items: center;
-    gap: 1px;
-    background: #1e1e1e;
-    padding: 6px 8px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    transition: background 0.3s;
-  }
-  .pending-order-item:hover {
-    background: #2a2a2a;
-  }
-  /* ปุ่ม Approve/Reject */
-  .status-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    margin-left: 4px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    color: #fff;
-    transition: background-color 0.3s ease;
-  }
-  .status-button svg {
-    width: 16px;
-    height: 16px;
-  }
-  .status-button.approve {
-    background-color: #28a745;
-  }
-  .status-button.approve:hover {
-    background-color: #218838;
-  }
-  .status-button.reject {
-    background-color: #dc3545;
-  }
-  .status-button.reject:hover {
-    background-color: #c82333;
-  }
-  
-  /* =========================
-     All Categories (คอลัมน์ขวา)
-  ========================= */
-  .category-panel {
-    background-color: #2a2a2a;
-    border-radius: 8px;
-    padding: 15px;
-    overflow-y: hidden; /* ไม่ให้ scrollbar */
-  }
-  .category-panel h4 {
-    color: #ffcc00;
-    margin-bottom: 10px;
-    text-align: center;
-  }
-  .all-categories-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* 5 คอลัมน์ */
-    gap: 10px;
-  }
-  .category-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #1e1e1e;
-    border-radius: 6px;
-    padding: 10px;
-    transition: transform 0.3s;
-    text-align: center;
-  }
-  .category-item:hover {
-    transform: scale(1.05);
-    background-color: #2f2f2f;
-  }
-  .category-item-text {
-    margin-top: 5px;
-    font-size: 12px;
-    color: #ffcc00;
-  }
+  background-color: #111;
+  color: #fff;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1.4;
+
+  /* เพิ่ม min-width + max-width และอนุญาตให้ตัดคำหลายบรรทัด */
+  min-width: 200px;      /* ความกว้างเริ่มต้น */
+  max-width: 300px;      /* ความกว้างสูงสุด */
+  white-space: normal;   /* ให้ข้อความขึ้นบรรทัดใหม่ได้ */
+  word-wrap: break-word; /* ตัดคำเมื่อยาวเกิน */
+
+  z-index: 999;
+}
+.category-item:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}

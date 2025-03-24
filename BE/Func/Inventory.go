@@ -121,12 +121,10 @@ func GetInventoriesByBranch(db *gorm.DB, posDB *gorm.DB, c *fiber.Ctx) error {
 
 	var inventories []Models.Inventory
 
-	// Query ข้อมูลใน Warehouse
 	if err := db.Where("branch_id = ?", branchID).Find(&inventories).Error; err == nil && len(inventories) > 0 {
 		return c.JSON(fiber.Map{"inventories": inventories})
 	}
 
-	// Query ข้อมูลใน POS
 	if err := posDB.Where("branch_id = ?", branchID).Find(&inventories).Error; err == nil && len(inventories) > 0 {
 		return c.JSON(fiber.Map{"inventories": inventories})
 	}
@@ -146,7 +144,6 @@ func GetBranchesWithInventory(db *gorm.DB, posDB *gorm.DB, c *fiber.Ctx) error {
 		BranchName string `json:"branch_name"`
 	}
 
-	// ดึงข้อมูลจาก Warehouse
 	warehouseErr := db.Raw(`
     SELECT DISTINCT i.branch_id AS branch_id, b.b_name AS branch_name
     FROM public."Inventory" i
@@ -154,7 +151,6 @@ func GetBranchesWithInventory(db *gorm.DB, posDB *gorm.DB, c *fiber.Ctx) error {
     WHERE i.quantity > 0
 `).Scan(&warehouseBranches).Error
 
-	// ดึงข้อมูลจาก POS
 	posErr := posDB.Raw(`
 		SELECT DISTINCT i.branch_id AS branch_id, b.b_name AS branch_name
 		FROM public."Inventory" i
@@ -162,7 +158,6 @@ func GetBranchesWithInventory(db *gorm.DB, posDB *gorm.DB, c *fiber.Ctx) error {
 		WHERE i.quantity > 0
 	`).Scan(&posBranches).Error
 
-	// ตรวจสอบข้อผิดพลาด
 	if warehouseErr != nil && posErr != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   "Failed to fetch branches with inventory",
@@ -170,7 +165,6 @@ func GetBranchesWithInventory(db *gorm.DB, posDB *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// แยกข้อมูลสำหรับ frontend
 	return c.JSON(fiber.Map{
 		"warehouse_branches": warehouseBranches,
 		"pos_branches":       posBranches,
@@ -185,7 +179,6 @@ func GetInventorySummary(db *gorm.DB, c *fiber.Ctx) error {
 		Quantity    int    `json:"quantity"`
 	}
 
-	// Query รวมข้อมูล
 	err := db.Raw(`
 		SELECT p.product_id, p.product_name, p.description, SUM(i.quantity) as quantity
 		FROM public."Inventory" i
@@ -205,7 +198,7 @@ func GetInventorySummary(db *gorm.DB, c *fiber.Ctx) error {
 type InventoryCategory struct {
 	Category      string          `json:"category"`
 	TotalQuantity int             `json:"total_quantity"`
-	Details       json.RawMessage `json:"details"` // ใช้ json.RawMessage เพื่อเก็บ JSON ดิบ
+	Details       json.RawMessage `json:"details"`
 }
 
 func GetInventoryByCategory(db *gorm.DB, c *fiber.Ctx) error {
@@ -280,7 +273,7 @@ func GetPosLowStock(db *gorm.DB, posDB *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	lastCacheTime = time.Now() // ✅ อัปเดต cache time
+	lastCacheTime = time.Now()
 	return c.JSON(fiber.Map{"low_stock_items": lowStockCache})
 }
 
@@ -294,7 +287,6 @@ func GetFilteredCategories(db *gorm.DB, posDB *gorm.DB, c *fiber.Ctx) error {
 
 	var categories []string
 
-	// Query ดึงหมวดหมู่สินค้าที่มีอยู่ในทั้ง Warehouse และ POS ที่เลือก
 	query := `
         SELECT DISTINCT p.description 
         FROM public."Inventory" i
@@ -348,7 +340,7 @@ func GetMatchingProductsInPOS(posDB *gorm.DB, c *fiber.Ctx) error {
 	var products []struct {
 		ProductID   string `json:"product_id"`
 		ProductName string `json:"product_name"`
-		InventoryID string `json:"inventory_id"` // ✅ เพิ่มตรงนี้
+		InventoryID string `json:"inventory_id"`
 	}
 
 	err := posDB.Raw(`

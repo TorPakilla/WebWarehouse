@@ -19,13 +19,11 @@ type OrderItemRequest struct {
 	UnitPrice float64 `json:"unitprice" validate:"required,min=0"`
 }
 
-// สร้าง ULID สำหรับ OrderNumber
 func GenerateULID() string {
 	entropy := ulid.Monotonic(rand.Reader, 0)
 	return ulid.MustNew(ulid.Timestamp(time.Now()), entropy).String()
 }
 
-// แปลง UUID จาก string เป็น pointer ของ uuid.UUID
 func parseUUIDPointer(id *string) *uuid.UUID {
 	if id == nil {
 		return nil
@@ -50,12 +48,10 @@ func AddOrder(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON format: " + err.Error()})
 	}
 
-	// ✅ ตรวจสอบว่ามีสินค้าใน Order หรือไม่
 	if len(req.OrderItems) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "At least one product is required in the order"})
 	}
 
-	// ✅ ใช้ Transaction เพื่อให้แน่ใจว่า Order และ OrderItems ถูกบันทึกพร้อมกัน
 	err := db.Transaction(func(tx *gorm.DB) error {
 		order := Models.Order{
 			OrderID:     uuid.New().String(),
@@ -66,12 +62,10 @@ func AddOrder(db *gorm.DB, c *fiber.Ctx) error {
 			CreatedAt:   time.Now(),
 		}
 
-		// ✅ บันทึก Order
 		if err := tx.Create(&order).Error; err != nil {
 			return err
 		}
 
-		// ✅ สร้าง OrderItems
 		var orderItems []Models.OrderItem
 		for _, item := range req.OrderItems {
 			if item.ProductID == "" {
@@ -88,7 +82,6 @@ func AddOrder(db *gorm.DB, c *fiber.Ctx) error {
 				return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "ProductUnit not found for product: " + item.ProductID})
 			}
 
-			// ✅ แปลงจำนวนตามหน่วย
 			finalQuantity := item.Quantity * productUnit.ConversRate
 			if finalQuantity <= 0 {
 				return fmt.Errorf("Invalid final quantity for product: %s", item.ProductID)
@@ -104,12 +97,10 @@ func AddOrder(db *gorm.DB, c *fiber.Ctx) error {
 			})
 		}
 
-		// ✅ บันทึก OrderItems
 		if err := tx.Create(&orderItems).Error; err != nil {
 			return err
 		}
 
-		// ✅ อัปเดต Total Amount
 		if err := UpdateTotalAmount(tx, order.OrderID); err != nil {
 			return err
 		}

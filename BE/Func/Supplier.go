@@ -8,14 +8,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// ✅ ฟังก์ชันเพิ่ม Supplier พร้อมบันทึกลง ProductSupplier
 func AddSupplier(db *gorm.DB, c *fiber.Ctx) error {
-	// โครงสร้าง JSON ที่ต้องรับจาก Frontend
-	// เช่น {"name":"CP MAMA","pricepallet":123,"productid":"<UUID ของ Product ที่มีอยู่>"}
 	type SupplierRequest struct {
 		Name        string  `json:"name"`
 		PricePallet float64 `json:"pricepallet"`
-		ProductID   string  `json:"productid"` // ต้องส่งเสมอ
+		ProductID   string  `json:"productid"`
 	}
 
 	var req SupplierRequest
@@ -25,7 +22,6 @@ func AddSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// 1) ตรวจสอบความถูกต้องของค่า
 	if req.Name == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Supplier name is required",
@@ -36,13 +32,13 @@ func AddSupplier(db *gorm.DB, c *fiber.Ctx) error {
 			"error": "Price must be > 0",
 		})
 	}
-	// บังคับให้ต้องมี productid เสมอ
+
 	if req.ProductID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "productid is required",
 		})
 	}
-	// พยายาม parse productid เป็น UUID
+
 	parsedUUID, err := uuid.Parse(req.ProductID)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -50,13 +46,12 @@ func AddSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// 2) สร้าง Supplier
 	supplierUUID := uuid.New()
 	supplier := Models.Supplier{
 		SupplierID:  supplierUUID.String(),
 		Name:        req.Name,
 		PricePallet: req.PricePallet,
-		// จะใส่ productID ลงใน Supplier ด้วยก็ได้ (ถ้าคุณยังใช้ฟิลด์นี้)
+
 		ProductID: parsedUUID.String(),
 	}
 	if err := db.Create(&supplier).Error; err != nil {
@@ -65,7 +60,6 @@ func AddSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// 3) สร้าง ProductSupplier โดยใช้ productid ที่ผู้ใช้ส่งมา
 	ps := Models.ProductSupplier{
 		ID:          uuid.New().String(),
 		SupplierID:  supplier.SupplierID,
@@ -78,7 +72,6 @@ func AddSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// 4) ตอบกลับ
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Supplier + ProductSupplier created successfully",
 		"data": fiber.Map{
@@ -89,12 +82,10 @@ func AddSupplier(db *gorm.DB, c *fiber.Ctx) error {
 	})
 }
 
-// Supplier.go หรือไฟล์ Router อื่น ๆ ที่คุณกำหนดไว้
 func AddProductToSupplier(db *gorm.DB, c *fiber.Ctx) error {
-	// ดึง supplierId จาก URL
+
 	supplierId := c.Params("supplierId")
 
-	// struct สำหรับรับ JSON body
 	type ProductPayload struct {
 		ProductID    string  `json:"product_id"`
 		Price        float64 `json:"price"`
@@ -108,12 +99,11 @@ func AddProductToSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// ตัวอย่างการบันทึกลงตาราง ProductSupplier (ปรับตามโครงสร้าง DB ของคุณ)
 	productSupplier := Models.ProductSupplier{
-		ID:          uuid.New().String(), // สร้าง uuid ใหม่
-		SupplierID:  supplierId,          // ใช้ค่าจากพารามิเตอร์
+		ID:          uuid.New().String(),
+		SupplierID:  supplierId,
 		ProductID:   payload.ProductID,
-		PricePallet: payload.Price, // สมมติว่าคุณเก็บราคาในฟิลด์ PricePallet
+		PricePallet: payload.Price,
 	}
 
 	if err := db.Create(&productSupplier).Error; err != nil {
@@ -166,7 +156,6 @@ func UpdateSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		ProductID   string  `json:"productid"`
 	}
 
-	// อ่าน body มาใส่ใน map เพื่อกรอง field
 	body := make(map[string]interface{})
 	if err := c.BodyParser(&body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON format: " + err.Error()})
@@ -178,7 +167,6 @@ func UpdateSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		"productid":   true,
 	}
 
-	// ตรวจสอบว่า body ส่ง field ที่อนุญาตหรือเปล่า
 	for key := range body {
 		if !allowedFields[key] {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid field: " + key})
@@ -190,7 +178,6 @@ func UpdateSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid JSON format: " + err.Error()})
 	}
 
-	// อัปเดตฟิลด์ที่ต้องการ
 	if req.Name != "" {
 		supplier.Name = req.Name
 	}
@@ -201,7 +188,6 @@ func UpdateSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		supplier.ProductID = req.ProductID
 	}
 
-	// บันทึก
 	if err := db.Save(&supplier).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update supplier: " + err.Error()})
 	}
@@ -212,7 +198,6 @@ func UpdateProductInSupplier(db *gorm.DB, c *fiber.Ctx) error {
 	supplierId := c.Params("supplierId")
 	psId := c.Params("psId")
 
-	// Body struct สำหรับรับ JSON ที่จะแก้ไข เช่น แก้ราคา
 	type UpdatePayload struct {
 		ProductID   string  `json:"product_id"`
 		PricePallet float64 `json:"price_pallet"`
@@ -224,7 +209,6 @@ func UpdateProductInSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// หา row ใน ProductSupplier
 	var ps Models.ProductSupplier
 	if err := db.Where("id = ? AND supplier_id = ?", psId, supplierId).First(&ps).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -232,7 +216,6 @@ func UpdateProductInSupplier(db *gorm.DB, c *fiber.Ctx) error {
 		})
 	}
 
-	// แก้ไขค่า
 	if body.ProductID != "" {
 		ps.ProductID = body.ProductID
 	}
